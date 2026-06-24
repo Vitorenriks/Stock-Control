@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Organizador de Estoque</title>
+    <!-- Tailwind CSS para o Design Moderno -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Biblioteca para gerar PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Ícones -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Oculta a área de impressão da tela normal */
+        #area-impressao { display: none; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .editing-mode { outline: 2px solid #2563eb; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 pb-20">
+
+    <!-- Cabeçalho -->
+    <header class="bg-blue-900 text-white p-4 shadow-md flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <img id="header-logo" src="" alt="Logo" class="w-10 h-10 rounded-full bg-white hidden object-cover">
+            <h1 id="header-name" class="font-bold text-lg">Meu Estabelecimento</h1>
+        </div>
+        <span id="status-local" class="bg-blue-800 text-xs px-2 py-1 rounded border border-blue-700">Modo Local Seguro</span>
+    </header>
+
+    <!-- ABA 1: ESTOQUE ATUAL -->
+    <main id="tab-estoque" class="tab-content active p-4">
+        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-6">
+            <h2 id="titulo-valor-total" class="text-sm text-gray-500 font-bold uppercase mb-1">Valor Total em Estoque</h2>
+            <p class="text-3xl font-black text-blue-600" id="valor-total-estoque">R$ 0,00</p>
+        </div>
+
+        <h3 id="titulo-adicionar-produto" class="font-bold text-lg mb-3">Adicionar Produto</h3>
+        <form id="form-produto" class="grid grid-cols-2 gap-3 mb-6 bg-white p-4 rounded-lg shadow-sm">
+            <input type="hidden" id="produto-editando-id" value="">
+            <input type="text" id="prod-nome" placeholder="Nome (Ex: Tomate)" class="col-span-2 border p-2 rounded" required>
+            <select id="prod-unidade" class="border p-2 rounded" required>
+                <option value="pct">Pacote (pct)</option>
+                <option value="gr">Gramas (gr)</option>
+                <option value="unidade">Unidade</option>
+                <option value="kg">Quilos (kg)</option>
+                <option value="caixa">Caixa</option>
+            </select>
+            <input type="number" id="prod-preco" placeholder="Preço (R$)" step="0.01" class="border p-2 rounded" required>
+            <input type="number" id="prod-qtd" placeholder="Qtd. Inicial" class="border p-2 rounded" required>
+            <div class="col-span-2 flex gap-2 mt-2">
+                <button id="btn-salvar-produto" type="submit" class="flex-1 bg-blue-600 text-white font-bold p-3 rounded">Salvar Produto</button>
+                <button id="btn-cancelar-edicao" type="button" onclick="cancelarEdicaoProduto()" class="hidden flex-1 bg-gray-200 text-gray-700 font-bold p-3 rounded">Cancelar</button>
+            </div>
+        </form>
+
+        <h3 id="titulo-meu-estoque" class="font-bold text-lg mb-3">Meu Estoque</h3>
+        <div id="lista-produtos" class="space-y-3">
+            <!-- Produtos serão injetados aqui via JS -->
+        </div>
+    </main>
+
+    <!-- ABA 2: NOVA COMPRA (PDF) -->
+    <main id="tab-compra" class="tab-content p-4">
+        <h2 id="titulo-solicitacao-compra" class="font-bold text-xl mb-4">Solicitação de Compra</h2>
+        <div class="bg-white p-4 rounded-lg shadow-sm mb-4">
+            <input type="text" id="req-funcionario" placeholder="Nome do Funcionário" class="w-full border p-2 rounded mb-3" required>
+            <input type="text" id="req-gestor" placeholder="Nome do Gestor (Opcional)" class="w-full border p-2 rounded mb-3">
+            <button id="btn-gerar-pdf" onclick="gerarPDF()" class="w-full bg-green-600 text-white font-bold p-3 rounded flex items-center justify-center gap-2">
+                <i class="fas fa-file-pdf"></i> Gerar Pedido (PDF)
+            </button>
+        </div>
+        <p id="texto-estoque-baixo" class="text-sm text-gray-500 text-center">Os itens com estoque baixo serão incluídos automaticamente no pedido.</p>
+    </main>
+
+    <!-- ABA 3: CONFIGURAÇÕES & BACKUP -->
+    <main id="tab-config" class="tab-content p-4">
+        <h2 id="titulo-configuracoes" class="font-bold text-xl mb-4">Configurações do App</h2>
+        
+        <div class="bg-white p-4 rounded-lg shadow-sm mb-6 border border-gray-200">
+            <h3 id="titulo-identidade" class="font-bold mb-3 text-gray-700">Identidade</h3>
+            <input type="text" id="config-nome" placeholder="Nome do Estabelecimento" class="w-full border p-2 rounded mb-3">
+            <button id="btn-salvar-nome" onclick="salvarIdentidade()" class="w-full bg-blue-100 text-blue-700 font-bold p-2 rounded">Salvar Nome</button>
+        </div>
+
+        <div class="bg-white p-4 rounded-lg shadow-sm mb-6 border border-gray-200">
+            <h3 id="titulo-idioma-moeda" class="font-bold mb-3 text-gray-700">Idioma e Moeda</h3>
+            <div class="grid grid-cols-1 gap-3">
+                <div>
+                    <label id="label-idioma" class="block text-xs font-bold text-gray-500 mb-1" for="config-idioma">Idioma</label>
+                    <select id="config-idioma" class="w-full border p-2 rounded" onchange="salvarPreferencias()">
+                        <option value="pt-BR">Português</option>
+                        <option value="en-US">English</option>
+                    </select>
+                </div>
+                <div>
+                    <label id="label-moeda" class="block text-xs font-bold text-gray-500 mb-1" for="config-moeda">Moeda</label>
+                    <select id="config-moeda" class="w-full border p-2 rounded" onchange="salvarPreferencias()">
+                        <option value="BRL">Real (BRL)</option>
+                        <option value="CHF">Franco suíço (CHF)</option>
+                        <option value="EUR">Euro (EUR)</option>
+                        <option value="USD">Dólar (USD)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-lg shadow-sm mb-6 border border-blue-200 bg-blue-50">
+            <h3 id="titulo-sincronizacao" class="font-bold mb-2 text-blue-800"><i class="fas fa-sync-alt"></i> Sincronização Local-First</h3>
+            <p id="texto-sincronizacao" class="text-sm text-gray-600 mb-4">Exporte os dados para enviar pelo WhatsApp ou importe um backup recebido.</p>
+            <div class="grid grid-cols-2 gap-2">
+                <button id="btn-exportar" onclick="exportarEstoque()" class="bg-blue-600 text-white p-3 rounded font-bold text-sm text-center">Exportar (.json)</button>
+                <label class="bg-gray-800 text-white p-3 rounded font-bold text-sm text-center cursor-pointer">
+                    <span id="texto-importar">Importar</span>
+                    <input type="file" id="import-file" accept=".json" class="hidden" onchange="importarEstoque(event)">
+                </label>
+            </div>
+        </div>
+    </main>
+
+    <!-- Menu Inferior (Bottom Navigation) -->
+    <nav class="fixed bottom-0 w-full bg-white border-t border-gray-200 flex justify-around p-3 text-sm">
+        <button onclick="mudarAba('tab-estoque')" class="flex flex-col items-center text-blue-600" id="btn-tab-estoque">
+            <i class="fas fa-box text-xl mb-1"></i> <span id="nav-estoque-texto">Estoque</span>
+        </button>
+        <button onclick="mudarAba('tab-compra')" class="flex flex-col items-center text-gray-500" id="btn-tab-compra">
+            <i class="fas fa-shopping-cart text-xl mb-1"></i> <span id="nav-comprar-texto">Comprar</span>
+        </button>
+        <button onclick="mudarAba('tab-config')" class="flex flex-col items-center text-gray-500" id="btn-tab-config">
+            <i class="fas fa-cog text-xl mb-1"></i> <span id="nav-configs-texto">Configs</span>
+        </button>
+    </nav>
+
+    <!-- Layout Escondido para o PDF -->
+    <div id="area-impressao" class="p-8 bg-white text-black w-[800px]">
+        <h1 class="text-2xl font-bold mb-1" id="pdf-nome-estab">Estabelecimento</h1>
+        <p id="pdf-titulo" class="text-gray-500 mb-6">Relatório de Necessidade de Compras</p>
+        <div class="flex justify-between mb-6 border-b pb-4">
+            <div>
+                <p><strong id="pdf-label-data">Data:</strong> <span id="pdf-data"></span></p>
+                <p><strong id="pdf-label-funcionario">Solicitante:</strong> <span id="pdf-funcionario"></span></p>
+                <p><strong id="pdf-label-gestor">Aprovador:</strong> <span id="pdf-gestor"></span></p>
+            </div>
+        </div>
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th id="pdf-th-produto" class="p-2 border">Produto</th>
+                    <th id="pdf-th-estoque" class="p-2 border">Estoque Atual</th>
+                    <th id="pdf-th-unidade" class="p-2 border">Unidade</th>
+                </tr>
+            </thead>
+            <tbody id="pdf-tabela-corpo">
+                <!-- Preenchido via JS -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- SCRIPT DE FUNCIONAMENTO (A Lógica do App) -->
+    <script src="js/app.js" defer></script>
+
+</body>
+</html>
