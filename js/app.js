@@ -448,7 +448,7 @@ function aplicarConfiguracoesInterface() {
     document.getElementById('pdf-label-funcionario').innerText = `${t('requester')}:`;
     document.getElementById('pdf-label-gestor').innerText = `${t('approver')}:`;
     document.getElementById('pdf-th-produto').innerText = t('product');
-    document.getElementById('pdf-th-estoque').innerText = t('current_stock');
+    document.getElementById('pdf-th-estoque').innerText = 'Compra';
     document.getElementById('pdf-th-unidade').innerText = t('unit');
     traduzirListaDeUnidades();
     traduzirSeletoresConfiguracao();
