@@ -347,17 +347,13 @@ carregarIdentidade();
 aplicarConfiguracoesInterface();
 renderizarEstoque();
 
-document.getElementById('lista-produtos').addEventListener('input', function(evento) {
-    const campo = evento.target;
-    if (!campo.matches('input[data-id]')) return;
+document.addEventListener('input', (e) => {
+    if (!e.target.classList.contains('input-qtd-comprar')) return;
 
-    const id = Number(campo.dataset.id);
-    const novoValor = Math.max(0, Number(campo.value) || 0);
-    const index = produtos.findIndex(prod => prod.id === id);
+    const id = parseInt(e.target.dataset.id);
+    const valor = parseInt(e.target.value) || 0;
 
-    if (index === -1) return;
-
-    produtos[index].quantidadeComprar = novoValor;
+    produtos = produtos.map(p => p.id === id ? { ...p, quantidadeComprar: valor } : p);
     appData.itens = produtos;
     localStorage.setItem('app_data', JSON.stringify(appData));
     localStorage.setItem('lista_produtos', JSON.stringify(produtos));
@@ -605,7 +601,7 @@ function renderizarEstoque() {
                     <span class="font-bold text-lg">${prod.estoqueAtual}</span>
                     <div class="flex items-center gap-2">
                         <label class="text-xs text-gray-500">Comprar</label>
-                        <input type="number" min="0" data-id="${prod.id}" value="${prod.quantidadeComprar ?? 0}" class="font-bold text-lg w-16 border rounded px-2 py-1 text-right">
+                        <input type="number" min="0" data-id="${prod.id}" value="${prod.quantidadeComprar || ''}" class="input-qtd-comprar font-bold text-lg w-16 border rounded px-2 py-1 text-right">
                         <button onclick="alterarQtd(${prod.id}, -1)" class="w-8 h-8 bg-red-100 text-red-600 rounded-full font-bold">-</button>
                         <button onclick="alterarQtd(${prod.id}, 1)" class="w-8 h-8 bg-green-100 text-green-600 rounded-full font-bold">+</button>
                     </div>
@@ -630,13 +626,15 @@ function gerarPDF() {
 
     const corpoTabela = document.getElementById('pdf-tabela-corpo');
     corpoTabela.innerHTML = '';
-    
-    produtos.forEach(prod => {
+
+    const produtosParaComprar = produtos.filter(produto => produto.quantidadeComprar > 0);
+
+    produtosParaComprar.forEach(produto => {
         corpoTabela.innerHTML += `
             <tr>
-                <td class="p-2 border">${prod.nome}</td>
-                <td class="p-2 border text-red-600 font-bold">${prod.estoqueAtual}</td>
-                <td class="p-2 border">${formatarMoeda(prod.precoUnitario)}</td>
+                <td class="p-2 border">${produto.nome}</td>
+                <td class="p-2 border text-blue-600 font-bold">${produto.quantidadeComprar}</td>
+                <td class="p-2 border">${formatarMoeda(produto.precoUnitario)}</td>
             </tr>
         `;
     });
