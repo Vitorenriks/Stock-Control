@@ -507,6 +507,7 @@ document.getElementById('form-produto').addEventListener('submit', function(e) {
         nome: document.getElementById('prod-nome').value,
         estoqueAtual: parseFloat(document.getElementById('prod-qtd').value),
         precoUnitario: parseFloat(document.getElementById('prod-preco').value),
+        giroMensal: Number(document.getElementById('giro-mensal').value || 0),
         quantidadeComprar: 0
     };
     if (produtoEditandoId) {
@@ -527,6 +528,7 @@ function preencherFormularioProduto(produto) {
     document.getElementById('prod-nome').value = produto.nome;
     document.getElementById('prod-preco').value = produto.precoUnitario;
     document.getElementById('prod-qtd').value = produto.estoqueAtual;
+    document.getElementById('giro-mensal').value = produto.giroMensal ?? 0;
     document.getElementById('titulo-adicionar-produto').innerText = `${t('add_product')} - ${t('edit')}`;
     document.getElementById('btn-salvar-produto').innerText = t('save_changes');
     document.getElementById('btn-cancelar-edicao').classList.remove('hidden');
@@ -583,6 +585,12 @@ function renderizarEstoque() {
 
     produtos.forEach(prod => {
         valorTotal += prod.estoqueAtual * prod.precoUnitario;
+        const giroMensal = Number(prod.giroMensal) || 0;
+        const consumoDiario = giroMensal > 0 ? giroMensal / 30 : 0;
+        const diasRestantes = consumoDiario > 0 ? prod.estoqueAtual / consumoDiario : null;
+        const duracaoTexto = consumoDiario <= 0 ? 'Sem estimativa' : `${Math.floor(diasRestantes)} dias`;
+        const duracaoClasse = consumoDiario > 0 && diasRestantes < 7 ? 'text-red-600 font-bold' : 'text-gray-600';
+
         lista.innerHTML += `
             <div class="bg-white p-3 rounded-lg border border-gray-200 shadow-sm flex flex-col gap-2">
                 <div class="flex justify-between items-start">
@@ -606,6 +614,7 @@ function renderizarEstoque() {
                         <button onclick="alterarQtd(${prod.id}, 1)" class="w-8 h-8 bg-green-100 text-green-600 rounded-full font-bold">+</button>
                     </div>
                 </div>
+                <p class="text-xs ${duracaoClasse}">Duração: ${duracaoTexto}</p>
             </div>
         `;
     });

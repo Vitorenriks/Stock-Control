@@ -51,6 +51,8 @@
             </select>
             <input type="number" id="prod-preco" placeholder="Preço (R$)" step="0.01" class="border p-2 rounded" required>
             <input type="number" id="prod-qtd" placeholder="Qtd. Inicial" class="border p-2 rounded" required>
+            <label for="giro-mensal" class="col-span-2 text-sm font-semibold text-gray-700">Consumo Mensal Estimado</label>
+            <input type="number" id="giro-mensal" placeholder="Ex: 120" min="0" class="col-span-2 border p-2 rounded">
             <div class="col-span-2 flex gap-2 mt-2">
                 <button id="btn-salvar-produto" type="submit" class="flex-1 bg-blue-600 text-white font-bold p-3 rounded">Salvar Produto</button>
                 <button id="btn-cancelar-edicao" type="button" onclick="cancelarEdicaoProduto()" class="hidden flex-1 bg-gray-200 text-gray-700 font-bold p-3 rounded">Cancelar</button>
