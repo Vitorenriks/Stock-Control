@@ -507,7 +507,8 @@ document.getElementById('form-produto').addEventListener('submit', function(e) {
         nome: document.getElementById('prod-nome').value,
         estoqueAtual: parseFloat(document.getElementById('prod-qtd').value),
         precoUnitario: parseFloat(document.getElementById('prod-preco').value),
-        giroMensal: Number(document.getElementById('giro-mensal').value || 0),
+        consumoSemanal: Number(document.getElementById('consumo-semanal').value || 0),
+        categoria: document.getElementById('prod-categoria').value.trim(),
         quantidadeComprar: 0
     };
     if (produtoEditandoId) {
@@ -528,7 +529,8 @@ function preencherFormularioProduto(produto) {
     document.getElementById('prod-nome').value = produto.nome;
     document.getElementById('prod-preco').value = produto.precoUnitario;
     document.getElementById('prod-qtd').value = produto.estoqueAtual;
-    document.getElementById('giro-mensal').value = produto.giroMensal ?? 0;
+    document.getElementById('consumo-semanal').value = produto.consumoSemanal ?? 0;
+    document.getElementById('prod-categoria').value = produto.categoria || '';
     document.getElementById('titulo-adicionar-produto').innerText = `${t('add_product')} - ${t('edit')}`;
     document.getElementById('btn-salvar-produto').innerText = t('save_changes');
     document.getElementById('btn-cancelar-edicao').classList.remove('hidden');
@@ -583,72 +585,114 @@ function renderizarEstoque() {
     lista.innerHTML = '';
     let valorTotal = 0;
 
-    produtos.forEach(prod => {
-        valorTotal += prod.estoqueAtual * prod.precoUnitario;
-        const giroMensal = Number(prod.giroMensal) || 0;
-        const consumoDiario = giroMensal > 0 ? giroMensal / 30 : 0;
-        const diasRestantes = consumoDiario > 0 ? prod.estoqueAtual / consumoDiario : null;
-        const duracaoTexto = consumoDiario <= 0 ? 'Sem estimativa' : `${Math.floor(diasRestantes)} dias`;
-        const duracaoClasse = consumoDiario > 0 && diasRestantes < 7 ? 'text-red-600 font-bold' : 'text-gray-600';
+    const grupos = produtos.reduce((acc, prod) => {
+        const categoria = (prod.categoria || 'Sem categoria').trim();
+        if (!acc[categoria]) acc[categoria] = [];
+        acc[categoria].push(prod);
+        return acc;
+    }, {});
 
-        lista.innerHTML += `
-            <div class="bg-white p-3 rounded-lg border border-gray-200 shadow-sm flex flex-col gap-2">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <h4 class="font-bold text-gray-800">${prod.nome}</h4>
-                        <p class="text-xs text-gray-500">${formatarMoeda(prod.precoUnitario)}</p>
-                    </div>
-                    <div class="flex flex-col items-end gap-2">
+    Object.entries(grupos).forEach(([categoria, itens]) => {
+        const cards = itens.map(prod => {
+            valorTotal += prod.estoqueAtual * prod.precoUnitario;
+            const consumoSemanal = Number(prod.consumoSemanal) || 0;
+            const diasRestantes = consumoSemanal > 0 ? prod.estoqueAtual / consumoSemanal : null;
+            const duracaoTexto = consumoSemanal <= 0 ? 'Sem estimativa' : `${Math.floor(diasRestantes)} dias`;
+            const duracaoClasse = consumoSemanal > 0 && diasRestantes < 7 ? 'text-red-600 font-bold' : 'text-gray-600';
+
+            return `
+                <div class="card-produto bg-white p-3 rounded-lg border border-gray-200 shadow-sm flex flex-col gap-2">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="font-bold text-gray-800">${prod.nome}</h4>
+                            <p class="text-xs text-gray-500">${formatarMoeda(prod.precoUnitario)}</p>
+                        </div>
                         <div class="flex gap-2">
                             <button onclick="editarProduto(${prod.id})" class="px-3 py-1 bg-blue-100 text-blue-700 rounded font-bold text-xs">${t('edit')}</button>
                             <button onclick="excluirProduto(${prod.id})" class="px-3 py-1 bg-red-100 text-red-700 rounded font-bold text-xs">${t('delete')}</button>
                         </div>
                     </div>
-                </div>
-                <div class="flex justify-between items-center bg-gray-50 p-2 rounded mt-1">
-                    <span class="font-bold text-lg">${prod.estoqueAtual}</span>
-                    <div class="flex items-center gap-2">
-                        <label class="text-xs text-gray-500">Comprar</label>
-                        <input type="number" min="0" data-id="${prod.id}" value="${prod.quantidadeComprar || ''}" class="input-qtd-comprar font-bold text-lg w-16 border rounded px-2 py-1 text-right">
-                        <button onclick="alterarQtd(${prod.id}, -1)" class="w-8 h-8 bg-red-100 text-red-600 rounded-full font-bold">-</button>
-                        <button onclick="alterarQtd(${prod.id}, 1)" class="w-8 h-8 bg-green-100 text-green-600 rounded-full font-bold">+</button>
+                    <div class="flex justify-between items-center bg-gray-50 p-2 rounded mt-1">
+                        <span class="font-bold text-lg">${prod.estoqueAtual}</span>
+                        <div class="flex items-center gap-2">
+                            <label class="text-xs text-gray-500">Comprar</label>
+                            <input type="number" min="0" data-id="${prod.id}" value="${prod.quantidadeComprar || ''}" class="input-qtd-comprar font-bold text-lg w-16 border rounded px-2 py-1 text-right">
+                            <button onclick="alterarQtd(${prod.id}, -1)" class="w-8 h-8 bg-red-100 text-red-600 rounded-full font-bold">-</button>
+                            <button onclick="alterarQtd(${prod.id}, 1)" class="w-8 h-8 bg-green-100 text-green-600 rounded-full font-bold">+</button>
+                        </div>
                     </div>
+                    <p class="text-xs ${duracaoClasse}">Duração: ${duracaoTexto}</p>
                 </div>
-                <p class="text-xs ${duracaoClasse}">Duração: ${duracaoTexto}</p>
-            </div>
+            `;
+        }).join('');
+
+        lista.innerHTML += `
+            <section class="mb-4">
+                <h4 class="font-semibold text-gray-700 mb-2">${categoria}</h4>
+                <div class="grupo-categoria flex gap-3 overflow-x-auto pb-2">${cards}</div>
+            </section>
         `;
     });
 
     document.getElementById('valor-total-estoque').innerText = formatarMoeda(valorTotal);
 }
 
-// Lógica de PDF (RF05)
+function montarListaTemporariaCompras() {
+    return produtos.filter(produto => {
+        const consumoSemanal = Number(produto.consumoSemanal) || 0;
+        return consumoSemanal > 0 && Number(produto.estoqueAtual) < consumoSemanal;
+    }).map(produto => ({
+        ...produto,
+        diferenca: Math.max(0, Number(produto.consumoSemanal) - Number(produto.estoqueAtual)),
+        custoEstimado: Number(produto.precoUnitario) * Math.max(0, Number(produto.consumoSemanal) - Number(produto.estoqueAtual))
+    }));
+}
+
 function gerarPDF() {
     const funcionario = document.getElementById('req-funcionario').value;
     if(!funcionario) return alert(t('required_employee'));
 
-    // Preenche o layout escondido
+    const listaTemporariaCompras = montarListaTemporariaCompras();
+    const corpoTabela = document.getElementById('pdf-tabela-corpo');
+    corpoTabela.innerHTML = '';
+
     document.getElementById('pdf-nome-estab').innerText = appData.configuracoes.empresa || 'Estabelecimento';
     document.getElementById('pdf-data').innerText = new Date().toLocaleDateString(configuracoes.language);
     document.getElementById('pdf-funcionario').innerText = funcionario;
     document.getElementById('pdf-gestor').innerText = document.getElementById('req-gestor').value || t('not_provided');
 
-    const corpoTabela = document.getElementById('pdf-tabela-corpo');
-    corpoTabela.innerHTML = '';
+    const grupos = listaTemporariaCompras.reduce((acc, item) => {
+        const categoria = (item.categoria || 'Sem categoria').trim();
+        if (!acc[categoria]) acc[categoria] = [];
+        acc[categoria].push(item);
+        return acc;
+    }, {});
 
-    const produtosParaComprar = produtos.filter(produto => produto.quantidadeComprar > 0);
-
-    produtosParaComprar.forEach(produto => {
+    Object.entries(grupos).forEach(([categoria, itens]) => {
         corpoTabela.innerHTML += `
             <tr>
-                <td class="p-2 border">${produto.nome}</td>
-                <td class="p-2 border text-blue-600 font-bold">${produto.quantidadeComprar}</td>
-                <td class="p-2 border">${formatarMoeda(produto.precoUnitario)}</td>
+                <td colspan="3" class="p-2 border bg-gray-100 font-bold">${categoria}</td>
             </tr>
         `;
+        itens.forEach(item => {
+            corpoTabela.innerHTML += `
+                <tr>
+                    <td class="p-2 border">${item.nome}</td>
+                    <td class="p-2 border text-blue-600 font-bold">${item.diferenca}</td>
+                    <td class="p-2 border">${new Intl.NumberFormat('de-CH', { style: 'currency', currency: 'CHF' }).format(item.custoEstimado)}</td>
+                </tr>
+            `;
+        });
     });
 
-    // Gera o PDF a partir da div HTML
+    if (!listaTemporariaCompras.length) {
+        corpoTabela.innerHTML = `
+            <tr>
+                <td colspan="3" class="p-2 border text-center text-gray-500">${t('no_critical_items')}</td>
+            </tr>
+        `;
+    }
+
     const elementoParaImpressao = document.getElementById('area-impressao');
     elementoParaImpressao.style.display = 'block';
 
@@ -661,7 +705,7 @@ function gerarPDF() {
     };
 
     html2pdf().set(opt).from(elementoParaImpressao).save().then(() => {
-        elementoParaImpressao.style.display = 'none'; // Esconde novamente após gerar
+        elementoParaImpressao.style.display = 'none';
     });
 }
 

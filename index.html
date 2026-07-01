@@ -9,6 +9,7 @@
     <!-- Tailwind CSS para o Design Moderno -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Biblioteca para gerar PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <!-- Ícones -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -18,6 +19,8 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         .editing-mode { outline: 2px solid #2563eb; }
+        .grupo-categoria { scroll-snap-type: x proximity; }
+        .card-produto { min-width: 240px; scroll-snap-align: start; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 pb-20">
@@ -51,8 +54,16 @@
             </select>
             <input type="number" id="prod-preco" placeholder="Preço (R$)" step="0.01" class="border p-2 rounded" required>
             <input type="number" id="prod-qtd" placeholder="Qtd. Inicial" class="border p-2 rounded" required>
-            <label for="giro-mensal" class="col-span-2 text-sm font-semibold text-gray-700">Consumo Mensal Estimado</label>
-            <input type="number" id="giro-mensal" placeholder="Ex: 120" min="0" class="col-span-2 border p-2 rounded">
+            <input type="text" id="prod-categoria" list="categorias-sugeridas" placeholder="Categoria/Segmento" class="col-span-2 border p-2 rounded">
+            <datalist id="categorias-sugeridas">
+                <option value="Bebidas"></option>
+                <option value="Comidas"></option>
+                <option value="Doces"></option>
+                <option value="Limpeza"></option>
+                <option value="Hortifruti"></option>
+            </datalist>
+            <label for="consumo-semanal" class="col-span-2 text-sm font-semibold text-gray-700">Consumo Médio Semanal</label>
+            <input type="number" id="consumo-semanal" placeholder="Ex: 18" min="0" class="col-span-2 border p-2 rounded">
             <div class="col-span-2 flex gap-2 mt-2">
                 <button id="btn-salvar-produto" type="submit" class="flex-1 bg-blue-600 text-white font-bold p-3 rounded">Salvar Produto</button>
                 <button id="btn-cancelar-edicao" type="button" onclick="cancelarEdicaoProduto()" class="hidden flex-1 bg-gray-200 text-gray-700 font-bold p-3 rounded">Cancelar</button>
