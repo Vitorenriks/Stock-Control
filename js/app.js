@@ -509,6 +509,7 @@ document.getElementById('form-produto').addEventListener('submit', function(e) {
         precoUnitario: parseFloat(document.getElementById('prod-preco').value),
         consumoSemanal: Number(document.getElementById('consumo-semanal').value || 0),
         categoria: document.getElementById('prod-categoria').value.trim(),
+        unit: document.getElementById('prod-unidade').value,
         quantidadeComprar: 0
     };
     if (produtoEditandoId) {
@@ -531,6 +532,7 @@ function preencherFormularioProduto(produto) {
     document.getElementById('prod-qtd').value = produto.estoqueAtual;
     document.getElementById('consumo-semanal').value = produto.consumoSemanal ?? 0;
     document.getElementById('prod-categoria').value = produto.categoria || '';
+    document.getElementById('prod-unidade').value = produto.unit || '';
     document.getElementById('titulo-adicionar-produto').innerText = `${t('add_product')} - ${t('edit')}`;
     document.getElementById('btn-salvar-produto').innerText = t('save_changes');
     document.getElementById('btn-cancelar-edicao').classList.remove('hidden');
