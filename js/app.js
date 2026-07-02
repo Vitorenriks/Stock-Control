@@ -7,7 +7,7 @@ const traducoes = {
         product_name: 'Nome (Ex: Tomate)',
         price: 'Preço',
         initial_qty: 'Qtd. Inicial',
-        consumption: 'Consumo/dia',
+        consumption: 'Consumo Médio Semanal',
         save_product: 'Salvar Produto',
         my_stock: 'Meu Estoque',
         purchase_request: 'Solicitação de Compra',
@@ -43,6 +43,7 @@ const traducoes = {
         invalid_file: 'Arquivo inválido.',
         read_error: 'Erro ao ler backup.',
         not_provided: 'Não informado',
+        no_estimate: 'Sem estimativa',
         stock_for_days: 'Estoque para {dias} dias',
         edit: 'Editar',
         delete: 'Excluir',
@@ -70,7 +71,7 @@ const traducoes = {
         product_name: 'Nome (es. Pomodoro)',
         price: 'Prezzo',
         initial_qty: 'Quantità iniziale',
-        consumption: 'Consumo/giorno',
+        consumption: 'Consumo medio settimanale',
         save_product: 'Salva prodotto',
         my_stock: 'Il mio magazzino',
         purchase_request: 'Richiesta d\'acquisto',
@@ -106,6 +107,7 @@ const traducoes = {
         invalid_file: 'File non valido.',
         read_error: 'Errore nella lettura del backup.',
         not_provided: 'Non fornito',
+        no_estimate: 'Nessuna stima',
         stock_for_days: 'Giacenza per {dias} giorni',
         edit: 'Modifica',
         delete: 'Elimina',
@@ -133,7 +135,7 @@ const traducoes = {
         product_name: 'Name (e.g. Tomato)',
         price: 'Price',
         initial_qty: 'Initial Qty',
-        consumption: 'Daily Use',
+        consumption: 'Average Weekly Consumption',
         save_product: 'Save Product',
         my_stock: 'My Stock',
         purchase_request: 'Purchase Request',
@@ -169,6 +171,7 @@ const traducoes = {
         invalid_file: 'Invalid file.',
         read_error: 'Error reading backup.',
         not_provided: 'Not provided',
+        no_estimate: 'No estimate',
         stock_for_days: 'Stock for {dias} days',
         edit: 'Edit',
         delete: 'Delete',
@@ -196,7 +199,7 @@ const traducoes = {
         product_name: 'Name (z. B. Tomate)',
         price: 'Preis',
         initial_qty: 'Anfängliche Menge',
-        consumption: 'Verbrauch/Tag',
+        consumption: 'Durchschnittlicher Wochenverbrauch',
         save_product: 'Produkt speichern',
         my_stock: 'Mein Lager',
         purchase_request: 'Bestellanforderung',
@@ -232,6 +235,7 @@ const traducoes = {
         invalid_file: 'Ungültige Datei.',
         read_error: 'Fehler beim Lesen des Backups.',
         not_provided: 'Nicht angegeben',
+        no_estimate: 'Keine Schätzung',
         stock_for_days: 'Bestand für {dias} Tage',
         edit: 'Bearbeiten',
         delete: 'Löschen',
@@ -259,6 +263,8 @@ const moedas = {
     EUR: { locale: 'de-DE', code: 'EUR' },
     USD: { locale: 'en-US', code: 'USD' }
 };
+
+const DIAS_COBERTURA_META = 7;
 
 function mapearIdiomaStorageParaLocale(idioma) {
     const mapa = {
@@ -417,9 +423,13 @@ function aplicarConfiguracoesInterface() {
     document.getElementById('prod-nome').placeholder = t('product_name');
     document.getElementById('prod-preco').placeholder = `${t('price')} (${getMoedaAtual().code})`;
     document.getElementById('prod-qtd').placeholder = t('initial_qty');
-    const campoConsumo = document.getElementById('prod-autonomia');
+    const campoConsumo = document.getElementById('consumo-semanal');
     if (campoConsumo) {
-        campoConsumo.placeholder = t('consumption');
+        campoConsumo.placeholder = 'Ex: 18';
+    }
+    const labelConsumo = document.getElementById('label-consumo');
+    if (labelConsumo) {
+        labelConsumo.innerText = t('consumption');
     }
     document.getElementById('btn-salvar-produto').innerText = t('save_product');
     document.getElementById('btn-cancelar-edicao').innerText = t('cancel');
@@ -582,6 +592,41 @@ function salvarERenderizar() {
     renderizarEstoque();
 }
 
+function calcularConsumoDiario(consumoSemanal) {
+    const consumoNormalizado = Number(consumoSemanal) || 0;
+    return consumoNormalizado > 0 ? consumoNormalizado / 7 : 0;
+}
+
+function calcularDiasDeCobertura(estoqueAtual, consumoSemanal) {
+    const estoqueNormalizado = Number(estoqueAtual) || 0;
+    const consumoDiario = calcularConsumoDiario(consumoSemanal);
+    if (consumoDiario <= 0) return null;
+    return estoqueNormalizado / consumoDiario;
+}
+
+function calcularNecessidadeDeReposicao(produto) {
+    const estoqueAtual = Number(produto.estoqueAtual) || 0;
+    const consumoSemanal = Number(produto.consumoSemanal) || 0;
+    const diasDeCobertura = calcularDiasDeCobertura(estoqueAtual, consumoSemanal);
+
+    if (consumoSemanal <= 0 || diasDeCobertura === null || diasDeCobertura >= DIAS_COBERTURA_META) {
+        return {
+            precisaComprar: false,
+            diferenca: 0,
+            custoEstimado: 0,
+            diasDeCobertura
+        };
+    }
+
+    const diferenca = Math.max(0, consumoSemanal - estoqueAtual);
+    return {
+        precisaComprar: diferenca > 0,
+        diferenca,
+        custoEstimado: (Number(produto.precoUnitario) || 0) * diferenca,
+        diasDeCobertura
+    };
+}
+
 function renderizarEstoque() {
     const lista = document.getElementById('lista-produtos');
     lista.innerHTML = '';
@@ -604,9 +649,11 @@ function renderizarEstoque() {
             const unidade = prod.unidade || '';
             const quantidadeComprar = prod.quantidadeComprar || '';
             const consumoSemanal = Number(prod.consumoSemanal) || 0;
-            const diasRestantes = consumoSemanal > 0 ? estoqueAtual / consumoSemanal : null;
-            const duracaoTexto = consumoSemanal <= 0 ? 'Sem estimativa' : `${Math.floor(diasRestantes)} dias`;
-            const duracaoClasse = (consumoSemanal > 0 && diasRestantes < 7) ? 'text-red-600 font-bold' : 'text-gray-600';
+            const diasRestantes = calcularDiasDeCobertura(estoqueAtual, consumoSemanal);
+            const duracaoTexto = consumoSemanal <= 0
+                ? t('no_estimate')
+                : t('stock_for_days', { dias: Math.floor(diasRestantes) });
+            const duracaoClasse = (consumoSemanal > 0 && diasRestantes < DIAS_COBERTURA_META) ? 'text-red-600 font-bold' : 'text-gray-600';
 
             valorTotal += estoqueAtual * precoUnitario;
 
@@ -640,7 +687,7 @@ function renderizarEstoque() {
                             </div>
                         </div>
                     </div>
-                    <p class="text-xs ${duracaoClasse}">Duração: ${duracaoTexto}</p>
+                    <p class="text-xs ${duracaoClasse}">${duracaoTexto}</p>
                 </div>
             `;
         }).join('');
@@ -669,14 +716,22 @@ function voltarParaCadastro() {
 }
 
 function montarListaTemporariaCompras() {
-    return produtos.filter(produto => {
-        const consumoSemanal = Number(produto.consumoSemanal) || 0;
-        return consumoSemanal > 0 && Number(produto.estoqueAtual) < consumoSemanal;
-    }).map(produto => ({
-        ...produto,
-        diferenca: Math.max(0, Number(produto.consumoSemanal) - Number(produto.estoqueAtual)),
-        custoEstimado: Number(produto.precoUnitario) * Math.max(0, Number(produto.consumoSemanal) - Number(produto.estoqueAtual))
-    }));
+    return produtos.reduce((listaTemporaria, produto) => {
+        const reposicao = calcularNecessidadeDeReposicao(produto);
+
+        if (!reposicao.precisaComprar) {
+            return listaTemporaria;
+        }
+
+        listaTemporaria.push({
+            ...produto,
+            diferenca: reposicao.diferenca,
+            custoEstimado: reposicao.custoEstimado,
+            diasDeCobertura: reposicao.diasDeCobertura
+        });
+
+        return listaTemporaria;
+    }, []);
 }
 
 function gerarPDF() {
