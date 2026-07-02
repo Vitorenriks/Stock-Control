@@ -596,40 +596,50 @@ function renderizarEstoque() {
 
     Object.entries(grupos).forEach(([categoria, itens]) => {
         const cards = itens.map(prod => {
-            valorTotal += prod.estoqueAtual * prod.precoUnitario;
+            // fallbacks e normalizações para evitar undefined/NaN na renderização
+            const id = prod.id;
+            const nome = prod.nome || '';
+            const precoUnitario = Number(prod.precoUnitario) || 0;
+            const estoqueAtual = Number(prod.estoqueAtual) || 0;
+            const unidade = prod.unidade || '';
+            const quantidadeComprar = prod.quantidadeComprar || '';
             const consumoSemanal = Number(prod.consumoSemanal) || 0;
-            const diasRestantes = consumoSemanal > 0 ? prod.estoqueAtual / consumoSemanal : null;
+            const diasRestantes = consumoSemanal > 0 ? estoqueAtual / consumoSemanal : null;
             const duracaoTexto = consumoSemanal <= 0 ? 'Sem estimativa' : `${Math.floor(diasRestantes)} dias`;
-            const duracaoClasse = consumoSemanal > 0 && diasRestantes < 7 ? 'text-red-600 font-bold' : 'text-gray-600';
+            const duracaoClasse = (consumoSemanal > 0 && diasRestantes < 7) ? 'text-red-600 font-bold' : 'text-gray-600';
+
+            valorTotal += estoqueAtual * precoUnitario;
+
+            const inputId = `input-comprar-${id}`;
 
             return `
                 <div class="card-produto bg-white p-3 rounded-lg border border-gray-200 shadow-sm flex flex-col gap-2">
                     <div class="flex justify-between items-start">
-                        <div>
-                            <h4 class="font-bold text-gray-800">${prod.nome}</h4>
-                            <p class="text-xs text-gray-500">${formatarMoeda(prod.precoUnitario)}</p>
+                        <div class="min-w-0">
+                            <h4 class="font-bold text-gray-800 truncate">${nome}</h4>
+                            <p class="text-xs text-gray-500">${formatarMoeda(precoUnitario)}</p>
                         </div>
-                        <div class="flex gap-2">
-                            <button onclick="editarProduto(${prod.id})" class="px-3 py-1 bg-blue-100 text-blue-700 rounded font-bold text-xs">${t('edit')}</button>
-                            <button onclick="excluirProduto(${prod.id})" class="px-3 py-1 bg-red-100 text-red-700 rounded font-bold text-xs">${t('delete')}</button>
+                        <div class="flex gap-2 flex-shrink-0">
+                            <button onclick="editarProduto(${id})" class="px-3 py-1 bg-blue-100 text-blue-700 rounded font-bold text-xs">${t('edit')}</button>
+                            <button onclick="excluirProduto(${id})" class="px-3 py-1 bg-red-100 text-red-700 rounded font-bold text-xs">${t('delete')}</button>
                         </div>
                     </div>
-                          <div class="bg-gray-50 p-3 rounded-lg mt-1 flex flex-col gap-2">
-                          <!-- Linha 1: Input de Comprar (Isolado) -->
-                          <div class="flex justify-between items-center">
-                          <label class="text-xs font-bold text-gray-500 uppercase">Comprar:</label>
-                          <input type="number" min="0" data-id="${prod.id}" value="${prod.quantidadeComprar || ''}" class="input-qtd-comprar font-bold text-lg w-16 border rounded px-2 py-1 text-right">
-                       </div>
-    
-                          <!-- Linha 2: Estoque com os botões de - e + (Separado por uma linha sutil) -->
-                          <div class="flex justify-between items-center border-t border-gray-200 pt-2 mt-1">
-                          <span class="text-xs text-gray-500">Estoque: <strong class="font-bold text-lg text-gray-800">${prod.estoqueAtual} ${prod.unidade || ''}</strong></span>
-                          <div class="flex gap-2">
-                          <button onclick="alterarQtd(${prod.id}, -1)" class="w-8 h-8 bg-red-100 text-red-600 rounded-full font-bold flex items-center justify-center">-</button>
-                          <button onclick="alterarQtd(${prod.id}, 1)" class="w-8 h-8 bg-green-100 text-green-600 rounded-full font-bold flex items-center justify-center">+</button>
-                       </div>
+                    <div class="bg-gray-50 p-3 rounded-lg mt-1 flex flex-col gap-2">
+                        <!-- Linha 1: Input de Comprar (com label associado) -->
+                        <div class="flex justify-between items-center">
+                            <label for="${inputId}" class="text-xs font-bold text-gray-500 uppercase">Comprar:</label>
+                            <input id="${inputId}" type="number" min="0" data-id="${id}" value="${quantidadeComprar}" class="input-qtd-comprar font-bold text-lg w-full max-w-[4rem] border rounded px-2 py-1 text-right" />
+                        </div>
+
+                        <!-- Linha 2: Estoque com os botões de - e + (Separado por uma linha sutil) -->
+                        <div class="flex justify-between items-center border-t border-gray-200 pt-2 mt-1">
+                            <span class="text-xs text-gray-500">Estoque: <strong class="font-bold text-lg text-gray-800">${estoqueAtual} ${unidade}</strong></span>
+                            <div class="flex gap-2">
+                                <button onclick="alterarQtd(${id}, -1)" class="w-8 h-8 bg-red-100 text-red-600 rounded-full font-bold flex items-center justify-center">-</button>
+                                <button onclick="alterarQtd(${id}, 1)" class="w-8 h-8 bg-green-100 text-green-600 rounded-full font-bold flex items-center justify-center">+</button>
+                            </div>
+                        </div>
                     </div>
-                </div>
                     <p class="text-xs ${duracaoClasse}">Duração: ${duracaoTexto}</p>
                 </div>
             `;
@@ -644,6 +654,18 @@ function renderizarEstoque() {
     });
 
     document.getElementById('valor-total-estoque').innerText = formatarMoeda(valorTotal);
+}
+
+function voltarParaCadastro() {
+    const formulario = document.getElementById('form-produto');
+    const inputNome = document.getElementById('prod-nome');
+    if (formulario) {
+        formulario.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    if (inputNome) {
+        // foco após pequeno delay para compatibilidade com scroll suave em mobile
+        setTimeout(() => inputNome.focus(), 300);
+    }
 }
 
 function montarListaTemporariaCompras() {
