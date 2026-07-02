@@ -614,15 +614,22 @@ function renderizarEstoque() {
                             <button onclick="excluirProduto(${prod.id})" class="px-3 py-1 bg-red-100 text-red-700 rounded font-bold text-xs">${t('delete')}</button>
                         </div>
                     </div>
-                    <div class="flex justify-between items-center bg-gray-50 p-2 rounded mt-1">
-                        <span class="font-bold text-lg">${prod.estoqueAtual}</span>
-                        <div class="flex items-center gap-2">
-                            <label class="text-xs text-gray-500">Comprar</label>
-                            <input type="number" min="0" data-id="${prod.id}" value="${prod.quantidadeComprar || ''}" class="input-qtd-comprar font-bold text-lg w-16 border rounded px-2 py-1 text-right">
-                            <button onclick="alterarQtd(${prod.id}, -1)" class="w-8 h-8 bg-red-100 text-red-600 rounded-full font-bold">-</button>
-                            <button onclick="alterarQtd(${prod.id}, 1)" class="w-8 h-8 bg-green-100 text-green-600 rounded-full font-bold">+</button>
-                        </div>
+                          <div class="bg-gray-50 p-3 rounded-lg mt-1 flex flex-col gap-2">
+                          <!-- Linha 1: Input de Comprar (Isolado) -->
+                          <div class="flex justify-between items-center">
+                          <label class="text-xs font-bold text-gray-500 uppercase">Comprar:</label>
+                          <input type="number" min="0" data-id="${prod.id}" value="${prod.quantidadeComprar || ''}" class="input-qtd-comprar font-bold text-lg w-16 border rounded px-2 py-1 text-right">
+                       </div>
+    
+                          <!-- Linha 2: Estoque com os botões de - e + (Separado por uma linha sutil) -->
+                          <div class="flex justify-between items-center border-t border-gray-200 pt-2 mt-1">
+                          <span class="text-xs text-gray-500">Estoque: <strong class="font-bold text-lg text-gray-800">${prod.estoqueAtual} ${prod.unidade || ''}</strong></span>
+                          <div class="flex gap-2">
+                          <button onclick="alterarQtd(${prod.id}, -1)" class="w-8 h-8 bg-red-100 text-red-600 rounded-full font-bold flex items-center justify-center">-</button>
+                          <button onclick="alterarQtd(${prod.id}, 1)" class="w-8 h-8 bg-green-100 text-green-600 rounded-full font-bold flex items-center justify-center">+</button>
+                       </div>
                     </div>
+                </div>
                     <p class="text-xs ${duracaoClasse}">Duração: ${duracaoTexto}</p>
                 </div>
             `;
