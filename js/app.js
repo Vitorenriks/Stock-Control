@@ -1,316 +1,30 @@
-const traducoes = {
-    'pt-BR': {
-        page_title: 'Organizador de Estoque',
-        local_mode: 'Modo Local Seguro',
-        total_stock_value: 'Valor Total em Estoque',
-        add_product: 'Adicionar Produto',
-        product_name: 'Nome (Ex: Tomate)',
-        price: 'Preço',
-        initial_qty: 'Qtd. Inicial',
-        consumption: 'Consumo Médio Semanal',
-        save_product: 'Salvar Produto',
-        my_stock: 'Meu Estoque',
-        purchase_request: 'Solicitação de Compra',
-        employee_name: 'Nome do Funcionário',
-        manager_name_optional: 'Nome do Gestor (Opcional)',
-        generate_pdf: 'Gerar Pedido (PDF)',
-        low_stock_note: 'Os itens com estoque baixo serão incluídos automaticamente no pedido.',
-        settings: 'Configurações do App',
-        identity: 'Identidade',
-        business_name: 'Nome do Estabelecimento',
-        save_name: 'Salvar Nome',
-        language_currency: 'Idioma e Moeda',
-        language: 'Idioma',
-        currency: 'Moeda',
-        sync_title: 'Sincronização Local-First',
-        sync_text: 'Exporte os dados para enviar pelo WhatsApp ou importe um backup recebido.',
-        export_json: 'Exportar (.json)',
-        import: 'Importar',
-        nav_stock: 'Estoque',
-        nav_buy: 'Comprar',
-        nav_settings: 'Configs',
-        pdf_title: 'Relatório de Necessidade de Compras',
-        date: 'Data',
-        requester: 'Solicitante',
-        approver: 'Aprovador',
-        product: 'Produto',
-        current_stock: 'Estoque Atual',
-        unit: 'Unidade',
-        no_critical_items: 'Não há itens com estoque baixo para pedir!',
-        required_employee: 'Preencha o nome do funcionário!',
-        name_saved: 'Nome salvo!',
-        synced_ok: 'Estoque sincronizado com sucesso!',
-        invalid_file: 'Arquivo inválido.',
-        read_error: 'Erro ao ler backup.',
-        not_provided: 'Não informado',
-        no_estimate: 'Sem estimativa',
-        stock_for_days: 'Estoque para {dias} dias',
-        edit: 'Editar',
-        delete: 'Excluir',
-        save_changes: 'Salvar Alterações',
-        cancel: 'Cancelar',
-        unit_pack: 'Pacote (pct)',
-        unit_grams: 'Gramas (gr)',
-        unit_unit: 'Unidade',
-        unit_kg: 'Quilos (kg)',
-        unit_box: 'Caixa',
-        language_pt: 'Português',
-        language_en: 'Inglês',
-        language_de: 'Alemão',
-        language_it: 'Italiano',
-        currency_brl: 'Real (BRL)',
-        currency_chf: 'Franco suíço (CHF)',
-        currency_eur: 'Euro (EUR)',
-        currency_usd: 'Dólar (USD)'
-    },
-    'it-IT': {
-        page_title: 'Organizzatore di Magazzino',
-        local_mode: 'Modalità locale sicura',
-        total_stock_value: 'Valore totale del magazzino',
-        add_product: 'Aggiungi prodotto',
-        product_name: 'Nome (es. Pomodoro)',
-        price: 'Prezzo',
-        initial_qty: 'Quantità iniziale',
-        consumption: 'Consumo medio settimanale',
-        save_product: 'Salva prodotto',
-        my_stock: 'Il mio magazzino',
-        purchase_request: 'Richiesta d\'acquisto',
-        employee_name: 'Nome del dipendente',
-        manager_name_optional: 'Nome del responsabile (facoltativo)',
-        generate_pdf: 'Genera ordine (PDF)',
-        low_stock_note: 'Gli articoli a stock basso verranno aggiunti automaticamente all\'ordine.',
-        settings: 'Impostazioni app',
-        identity: 'Identità',
-        business_name: 'Nome dell\'attività',
-        save_name: 'Salva nome',
-        language_currency: 'Lingua e valuta',
-        language: 'Lingua',
-        currency: 'Valuta',
-        sync_title: 'Sincronizzazione locale-first',
-        sync_text: 'Esporta i dati per inviarli via WhatsApp o importa un backup ricevuto.',
-        export_json: 'Esporta (.json)',
-        import: 'Importa',
-        nav_stock: 'Magazzino',
-        nav_buy: 'Acquisti',
-        nav_settings: 'Impostazioni',
-        pdf_title: 'Rapporto esigenze di acquisto',
-        date: 'Data',
-        requester: 'Richiedente',
-        approver: 'Approvatore',
-        product: 'Prodotto',
-        current_stock: 'Giacenza attuale',
-        unit: 'Unità',
-        no_critical_items: 'Non ci sono articoli a stock basso da richiedere!',
-        required_employee: 'Compila il nome del dipendente!',
-        name_saved: 'Nome salvato!',
-        synced_ok: 'Magazzino sincronizzato con successo!',
-        invalid_file: 'File non valido.',
-        read_error: 'Errore nella lettura del backup.',
-        not_provided: 'Non fornito',
-        no_estimate: 'Nessuna stima',
-        stock_for_days: 'Giacenza per {dias} giorni',
-        edit: 'Modifica',
-        delete: 'Elimina',
-        save_changes: 'Salva modifiche',
-        cancel: 'Annulla',
-        unit_pack: 'Pacco (pct)',
-        unit_grams: 'Grammi (gr)',
-        unit_unit: 'Unità',
-        unit_kg: 'Chilogrammi (kg)',
-        unit_box: 'Scatola',
-        language_pt: 'Portoghese',
-        language_en: 'Inglese',
-        language_de: 'Tedesco',
-        language_it: 'Italiano',
-        currency_brl: 'Real (BRL)',
-        currency_chf: 'Franco svizzero (CHF)',
-        currency_eur: 'Euro (EUR)',
-        currency_usd: 'Dollaro (USD)'
-    },
-    'en-US': {
-        page_title: 'Inventory Organizer',
-        local_mode: 'Local Secure Mode',
-        total_stock_value: 'Total Stock Value',
-        add_product: 'Add Product',
-        product_name: 'Name (e.g. Tomato)',
-        price: 'Price',
-        initial_qty: 'Initial Qty',
-        consumption: 'Average Weekly Consumption',
-        save_product: 'Save Product',
-        my_stock: 'My Stock',
-        purchase_request: 'Purchase Request',
-        employee_name: 'Employee Name',
-        manager_name_optional: 'Manager Name (Optional)',
-        generate_pdf: 'Generate Order (PDF)',
-        low_stock_note: 'Low-stock items will be added automatically to the order.',
-        settings: 'App Settings',
-        identity: 'Identity',
-        business_name: 'Business Name',
-        save_name: 'Save Name',
-        language_currency: 'Language and Currency',
-        language: 'Language',
-        currency: 'Currency',
-        sync_title: 'Local-First Sync',
-        sync_text: 'Export data to send via WhatsApp or import a received backup.',
-        export_json: 'Export (.json)',
-        import: 'Import',
-        nav_stock: 'Stock',
-        nav_buy: 'Buy',
-        nav_settings: 'Settings',
-        pdf_title: 'Purchase Needs Report',
-        date: 'Date',
-        requester: 'Requester',
-        approver: 'Approver',
-        product: 'Product',
-        current_stock: 'Current Stock',
-        unit: 'Unit',
-        no_critical_items: 'There are no low-stock items to request!',
-        required_employee: 'Fill in the employee name!',
-        name_saved: 'Name saved!',
-        synced_ok: 'Stock synced successfully!',
-        invalid_file: 'Invalid file.',
-        read_error: 'Error reading backup.',
-        not_provided: 'Not provided',
-        no_estimate: 'No estimate',
-        stock_for_days: 'Stock for {dias} days',
-        edit: 'Edit',
-        delete: 'Delete',
-        save_changes: 'Save Changes',
-        cancel: 'Cancel',
-        unit_pack: 'Pack (pct)',
-        unit_grams: 'Grams (gr)',
-        unit_unit: 'Unit',
-        unit_kg: 'Kilograms (kg)',
-        unit_box: 'Box',
-        language_pt: 'Portuguese',
-        language_en: 'English',
-        language_de: 'German',
-        language_it: 'Italian',
-        currency_brl: 'Real (BRL)',
-        currency_chf: 'Swiss franc (CHF)',
-        currency_eur: 'Euro (EUR)',
-        currency_usd: 'Dollar (USD)'
-    },
-    'de-DE': {
-        page_title: 'Lagerorganizer',
-        local_mode: 'Lokaler Sicherheitsmodus',
-        total_stock_value: 'Gesamtwert des Lagerbestands',
-        add_product: 'Produkt hinzufügen',
-        product_name: 'Name (z. B. Tomate)',
-        price: 'Preis',
-        initial_qty: 'Anfängliche Menge',
-        consumption: 'Durchschnittlicher Wochenverbrauch',
-        save_product: 'Produkt speichern',
-        my_stock: 'Mein Lager',
-        purchase_request: 'Bestellanforderung',
-        employee_name: 'Name des Mitarbeiters',
-        manager_name_optional: 'Name des Managers (Optional)',
-        generate_pdf: 'Bestellung erstellen (PDF)',
-        low_stock_note: 'Artikel mit niedrigem Bestand werden automatisch in die Bestellung aufgenommen.',
-        settings: 'App-Einstellungen',
-        identity: 'Identität',
-        business_name: 'Name des Unternehmens',
-        save_name: 'Name speichern',
-        language_currency: 'Sprache und Währung',
-        language: 'Sprache',
-        currency: 'Währung',
-        sync_title: 'Lokale Synchronisierung',
-        sync_text: 'Daten exportieren, um sie per WhatsApp zu senden, oder ein empfangenes Backup importieren.',
-        export_json: 'Exportieren (.json)',
-        import: 'Importieren',
-        nav_stock: 'Lager',
-        nav_buy: 'Kaufen',
-        nav_settings: 'Einstellungen',
-        pdf_title: 'Bericht über o Einkaufsbedarf',
-        date: 'Datum',
-        requester: 'Anforderer',
-        approver: 'Genehmiger',
-        product: 'Produkt',
-        current_stock: 'Aktueller Bestand',
-        unit: 'Einheit',
-        no_critical_items: 'Es gibt keine Artikel mit niedrigem Bestand zum Anfordern!',
-        required_employee: 'Bitte geben Sie den Namen des Mitarbeiters ein!',
-        name_saved: 'Name gespeichert!',
-        synced_ok: 'Bestand erfolgreich synchronisiert!',
-        invalid_file: 'Ungültige Datei.',
-        read_error: 'Fehler beim Lesen des Backups.',
-        not_provided: 'Nicht angegeben',
-        no_estimate: 'Keine Schätzung',
-        stock_for_days: 'Bestand für {dias} Tage',
-        edit: 'Bearbeiten',
-        delete: 'Löschen',
-        save_changes: 'Änderungen speichern',
-        cancel: 'Abbrechen',
-        unit_pack: 'Paket (pct)',
-        unit_grams: 'Gramm (gr)',
-        unit_unit: 'Einheit',
-        unit_kg: 'Kilogramm (kg)',
-        unit_box: 'Karton',
-        language_pt: 'Portugiesisch',
-        language_en: 'Englisch',
-        language_de: 'Deutsch',
-        language_it: 'Italienisch',
-        currency_brl: 'Real (BRL)',
-        currency_chf: 'Schweizer Franken (CHF)',
-        currency_eur: 'Euro (EUR)',
-        currency_usd: 'US-Dollar (USD)'
-    }
-};
+const {
+    traducoes,
+    moedas,
+    mapearIdiomaStorageParaLocale,
+    mapearLocaleParaIdiomaStorage,
+    detectarIdiomaInicial
+} = window.InventoryI18n;
 
-const moedas = {
-    BRL: { locale: 'pt-BR', code: 'BRL' },
-    CHF: { locale: 'de-CH', code: 'CHF' },
-    EUR: { locale: 'de-DE', code: 'EUR' },
-    USD: { locale: 'en-US', code: 'USD' }
-};
+const {
+    renderizarCardProduto,
+    renderizarSecaoCategoria,
+    renderizarPdfCategoria,
+    renderizarPdfItem,
+    renderizarPdfSemItens
+} = window.InventoryUI;
 
 const DIAS_COBERTURA_META = 7;
 
-function mapearIdiomaStorageParaLocale(idioma) {
-    const mapa = {
-        pt: 'pt-BR',
-        'pt-BR': 'pt-BR',
-        en: 'en-US',
-        'en-US': 'en-US',
-        de: 'de-DE',
-        'de-DE': 'de-DE',
-        it: 'it-IT',
-        'it-IT': 'it-IT'
-    };
-    return mapa[idioma] || null;
-}
-
-function mapearLocaleParaIdiomaStorage(locale) {
-    const mapa = {
-        'pt-BR': 'pt',
-        'en-US': 'en',
-        'de-DE': 'de',
-        'it-IT': 'it'
-    };
-    return mapa[locale] || 'pt';
-}
-
-function detectarIdiomaInicial() {
-    const navegador = navigator.language || navigator.userLanguage || 'pt-BR';
-    const idiomaBase = (navegador || 'pt-BR').toLowerCase();
-    if (idiomaBase.startsWith('pt')) return 'pt-BR';
-    if (idiomaBase.startsWith('en')) return 'en-US';
-    if (idiomaBase.startsWith('de')) return 'de-DE';
-    if (idiomaBase.startsWith('it')) return 'it-IT';
-    return 'pt-BR';
-}
-
 function carregarConfiguracoesSalvas() {
     try {
-        const appData = JSON.parse(localStorage.getItem('app_data'));
-        if (appData && appData.version === '2.2') {
-            return appData;
+        const persistedAppData = JSON.parse(localStorage.getItem('app_data'));
+        if (persistedAppData && persistedAppData.version === '2.2') {
+            return persistedAppData;
         }
     } catch (erro) {
-        // continua com migração
     }
-    
-    // Migração de dados antigos
+
     const produtosAntigos = JSON.parse(localStorage.getItem('lista_produtos')) || [];
     const configAntiga = {
         language: 'pt-BR',
@@ -323,10 +37,8 @@ function carregarConfiguracoesSalvas() {
             configAntiga.currency = configApp.currency || 'BRL';
         }
     } catch (erro) {
-        // usar valores padrão
     }
-    
-    // Nova estrutura
+
     const idiomaMigrado = mapearIdiomaStorageParaLocale(configAntiga.language) || detectarIdiomaInicial();
     const novaEstrutura = {
         version: '2.2',
@@ -342,7 +54,6 @@ function carregarConfiguracoesSalvas() {
     return novaEstrutura;
 }
 
-// Inicialização
 let appData = carregarConfiguracoesSalvas();
 let produtos = appData.itens || [];
 let configuracoes = {
@@ -353,16 +64,14 @@ carregarIdentidade();
 aplicarConfiguracoesInterface();
 renderizarEstoque();
 
-document.addEventListener('input', (e) => {
-    if (!e.target.classList.contains('input-qtd-comprar')) return;
+document.addEventListener('input', (event) => {
+    if (!event.target.classList.contains('input-qtd-comprar')) return;
 
-    const id = parseInt(e.target.dataset.id);
-    const valor = parseInt(e.target.value) || 0;
+    const produtoId = parseInt(event.target.dataset.id);
+    const quantidadeComprar = parseInt(event.target.value) || 0;
 
-    produtos = produtos.map(p => p.id === id ? { ...p, quantidadeComprar: valor } : p);
-    appData.itens = produtos;
-    localStorage.setItem('app_data', JSON.stringify(appData));
-    localStorage.setItem('lista_produtos', JSON.stringify(produtos));
+    produtos = produtos.map((produto) => produto.id === produtoId ? { ...produto, quantidadeComprar } : produto);
+    salvarEstadoLocal();
 });
 
 function getTraducoesAtuais() {
@@ -386,6 +95,26 @@ function formatarMoeda(valor) {
     return new Intl.NumberFormat(moeda.locale, { style: 'currency', currency: moeda.code }).format(valor);
 }
 
+function salvarEstadoLocal() {
+    appData.itens = produtos;
+    localStorage.setItem('app_data', JSON.stringify(appData));
+    localStorage.setItem('lista_produtos', JSON.stringify(produtos));
+}
+
+function aplicarTraducoes() {
+    document.querySelectorAll('.i18n-placeholder').forEach((elemento) => {
+        const chave = elemento.dataset.i18nPlaceholder;
+        const fallback = elemento.dataset.placeholderDefault || elemento.getAttribute('placeholder') || chave || '';
+
+        if (!chave) {
+            return;
+        }
+
+        const traducao = t(chave);
+        elemento.setAttribute('placeholder', traducao === chave ? fallback : traducao);
+    });
+}
+
 function traduzirListaDeUnidades() {
     const selectUnidade = document.getElementById('prod-unidade');
     selectUnidade.innerHTML = `
@@ -395,6 +124,41 @@ function traduzirListaDeUnidades() {
         <option value="kg">${t('unit_kg')}</option>
         <option value="caixa">${t('unit_box')}</option>
     `;
+}
+
+function formatarUnidadeExibicao(unidade) {
+    const mapaUnidades = {
+        pct: t('unit_pack'),
+        gr: t('unit_grams'),
+        unidade: t('unit_unit'),
+        kg: t('unit_kg'),
+        caixa: t('unit_box')
+    };
+
+    return mapaUnidades[unidade] || unidade || '';
+}
+
+function agruparItensPorCategoria(itens) {
+    return itens.reduce((gruposPorCategoria, item) => {
+        const categoria = (item.categoria || t('uncategorized')).trim();
+        if (!gruposPorCategoria[categoria]) {
+            gruposPorCategoria[categoria] = [];
+        }
+        gruposPorCategoria[categoria].push(item);
+        return gruposPorCategoria;
+    }, {});
+}
+
+function obterProdutoDoFormulario() {
+    return {
+        nome: document.getElementById('prod-nome').value,
+        estoqueAtual: parseFloat(document.getElementById('prod-qtd').value),
+        precoUnitario: parseFloat(document.getElementById('prod-preco').value),
+        consumoSemanal: Number(document.getElementById('consumo-semanal').value || 0),
+        categoria: document.getElementById('prod-categoria').value.trim(),
+        unit: document.getElementById('prod-unidade').value,
+        quantidadeComprar: 0
+    };
 }
 
 function traduzirSeletoresConfiguracao() {
@@ -414,34 +178,35 @@ function traduzirSeletoresConfiguracao() {
     `;
 }
 
-function aplicarConfiguracoesInterface() {
-    document.documentElement.lang = configuracoes.language;
-    document.title = t('page_title');
-    document.getElementById('status-local').innerText = t('local_mode');
-    document.getElementById('titulo-valor-total').innerText = t('total_stock_value');
+function aplicarTextosFormularioProduto() {
     document.getElementById('titulo-adicionar-produto').innerText = t('add_product');
-    document.getElementById('prod-nome').placeholder = t('product_name');
-    document.getElementById('prod-preco').placeholder = `${t('price')} (${getMoedaAtual().code})`;
-    document.getElementById('prod-qtd').placeholder = t('initial_qty');
-    const campoConsumo = document.getElementById('consumo-semanal');
-    if (campoConsumo) {
-        campoConsumo.placeholder = 'Ex: 18';
-    }
+    document.getElementById('label-prod-nome').innerText = t('product_name');
+    document.getElementById('label-prod-unidade').innerText = t('unit');
+    document.getElementById('label-prod-preco').innerText = `${t('price')} (${getMoedaAtual().code})`;
+    document.getElementById('label-prod-qtd').innerText = t('initial_qty');
+    document.getElementById('label-prod-categoria').innerText = t('category');
+
     const labelConsumo = document.getElementById('label-consumo');
     if (labelConsumo) {
         labelConsumo.innerText = t('consumption');
     }
+
     document.getElementById('btn-salvar-produto').innerText = t('save_product');
     document.getElementById('btn-cancelar-edicao').innerText = t('cancel');
-    document.getElementById('titulo-meu-estoque').innerText = t('my_stock');
+}
+
+function aplicarTextosSolicitacaoCompra() {
     document.getElementById('titulo-solicitacao-compra').innerText = t('purchase_request');
-    document.getElementById('req-funcionario').placeholder = t('employee_name');
-    document.getElementById('req-gestor').placeholder = t('manager_name_optional');
+    document.getElementById('label-req-funcionario').innerText = t('employee_name');
+    document.getElementById('label-req-gestor').innerText = t('manager_name_optional');
     document.getElementById('btn-gerar-pdf').innerHTML = `<i class="fas fa-file-pdf"></i> ${t('generate_pdf')}`;
     document.getElementById('texto-estoque-baixo').innerText = t('low_stock_note');
+}
+
+function aplicarTextosConfiguracoes() {
     document.getElementById('titulo-configuracoes').innerText = t('settings');
     document.getElementById('titulo-identidade').innerText = t('identity');
-    document.getElementById('config-nome').placeholder = t('business_name');
+    document.getElementById('label-config-nome').innerText = t('business_name');
     document.getElementById('btn-salvar-nome').innerText = t('save_name');
     document.getElementById('titulo-idioma-moeda').innerText = t('language_currency');
     document.getElementById('label-idioma').innerText = t('language');
@@ -450,6 +215,9 @@ function aplicarConfiguracoesInterface() {
     document.getElementById('texto-sincronizacao').innerText = t('sync_text');
     document.getElementById('btn-exportar').innerText = t('export_json');
     document.getElementById('texto-importar').innerText = t('import');
+}
+
+function aplicarTextosNavegacaoEPdf() {
     document.getElementById('nav-estoque-texto').innerText = t('nav_stock');
     document.getElementById('nav-comprar-texto').innerText = t('nav_buy');
     document.getElementById('nav-configs-texto').innerText = t('nav_settings');
@@ -458,12 +226,28 @@ function aplicarConfiguracoesInterface() {
     document.getElementById('pdf-label-funcionario').innerText = `${t('requester')}:`;
     document.getElementById('pdf-label-gestor').innerText = `${t('approver')}:`;
     document.getElementById('pdf-th-produto').innerText = t('product');
-    document.getElementById('pdf-th-estoque').innerText = 'Compra';
+    document.getElementById('pdf-th-estoque').innerText = t('purchase_qty');
     document.getElementById('pdf-th-unidade').innerText = t('unit');
+}
+
+function aplicarConfiguracoesInterface() {
+    document.documentElement.lang = configuracoes.language;
+    document.title = t('page_title');
+    document.getElementById('status-local').innerText = t('local_mode');
+    document.getElementById('titulo-valor-total').innerText = t('total_stock_value');
+    document.getElementById('titulo-meu-estoque').innerText = t('my_stock');
+    document.getElementById('btn-novo-produto').innerText = t('new_product');
+
+    aplicarTextosFormularioProduto();
+    aplicarTextosSolicitacaoCompra();
+    aplicarTextosConfiguracoes();
+    aplicarTextosNavegacaoEPdf();
     traduzirListaDeUnidades();
     traduzirSeletoresConfiguracao();
+    aplicarTraducoes();
     document.getElementById('config-idioma').value = traducoes[configuracoes.language] ? configuracoes.language : 'pt-BR';
     document.getElementById('config-moeda').value = moedas[configuracoes.currency] ? configuracoes.currency : 'BRL';
+    carregarIdentidade();
     renderizarEstoque();
 }
 
@@ -479,23 +263,20 @@ function salvarPreferencias() {
     aplicarConfiguracoesInterface();
 }
 
-// Navegação entre abas
 function mudarAba(abaId) {
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach((tabContent) => tabContent.classList.remove('active'));
     document.getElementById(abaId).classList.add('active');
-    
-    // Controle de cores dos botões
-    document.querySelectorAll('nav button').forEach(btn => {
-        btn.classList.remove('text-blue-600');
-        btn.classList.add('text-gray-500');
+
+    document.querySelectorAll('nav button').forEach((botaoNavegacao) => {
+        botaoNavegacao.classList.remove('text-blue-600');
+        botaoNavegacao.classList.add('text-gray-500');
     });
     document.getElementById('btn-' + abaId).classList.remove('text-gray-500');
     document.getElementById('btn-' + abaId).classList.add('text-blue-600');
 }
 
-// Configurações e Identidade
 function carregarIdentidade() {
-    const nome = appData.configuracoes.empresa || localStorage.getItem('nome_estabelecimento') || 'Meu Estabelecimento';
+    const nome = appData.configuracoes.empresa || localStorage.getItem('nome_estabelecimento') || t('default_business_name');
     document.getElementById('header-name').innerText = nome;
     document.getElementById('config-nome').value = nome;
 }
@@ -509,19 +290,11 @@ function salvarIdentidade() {
     alert(t('name_saved'));
 }
 
-// Lógica de Produtos
-document.getElementById('form-produto').addEventListener('submit', function(e) {
-    e.preventDefault();
+document.getElementById('form-produto').addEventListener('submit', function(event) {
+    event.preventDefault();
     const produtoEditandoId = document.getElementById('produto-editando-id').value;
-    const novoProduto = {
-        nome: document.getElementById('prod-nome').value,
-        estoqueAtual: parseFloat(document.getElementById('prod-qtd').value),
-        precoUnitario: parseFloat(document.getElementById('prod-preco').value),
-        consumoSemanal: Number(document.getElementById('consumo-semanal').value || 0),
-        categoria: document.getElementById('prod-categoria').value.trim(),
-        unit: document.getElementById('prod-unidade').value,
-        quantidadeComprar: 0
-    };
+    const novoProduto = obterProdutoDoFormulario();
+
     if (produtoEditandoId) {
         const index = produtos.findIndex(p => p.id === Number(produtoEditandoId));
         if (index !== -1) {
@@ -578,17 +351,15 @@ function excluirProduto(id) {
 
 function alterarQtd(id, delta) {
     const index = produtos.findIndex(p => p.id === id);
-    if(index !== -1) {
+    if (index !== -1) {
         produtos[index].estoqueAtual += delta;
-        if(produtos[index].estoqueAtual < 0) produtos[index].estoqueAtual = 0;
+        if (produtos[index].estoqueAtual < 0) produtos[index].estoqueAtual = 0;
         salvarERenderizar();
     }
 }
 
 function salvarERenderizar() {
-    appData.itens = produtos;
-    localStorage.setItem('app_data', JSON.stringify(appData));
-    localStorage.setItem('lista_produtos', JSON.stringify(produtos));
+    salvarEstadoLocal();
     renderizarEstoque();
 }
 
@@ -632,21 +403,15 @@ function renderizarEstoque() {
     lista.innerHTML = '';
     let valorTotal = 0;
 
-    const grupos = produtos.reduce((acc, prod) => {
-        const categoria = (prod.categoria || 'Sem categoria').trim();
-        if (!acc[categoria]) acc[categoria] = [];
-        acc[categoria].push(prod);
-        return acc;
-    }, {});
+    const grupos = agruparItensPorCategoria(produtos);
 
     Object.entries(grupos).forEach(([categoria, itens]) => {
         const cards = itens.map(prod => {
-            // fallbacks e normalizações para evitar undefined/NaN na renderização
             const id = prod.id;
             const nome = prod.nome || '';
             const precoUnitario = Number(prod.precoUnitario) || 0;
             const estoqueAtual = Number(prod.estoqueAtual) || 0;
-            const unidade = prod.unidade || '';
+            const unidade = formatarUnidadeExibicao(prod.unit || prod.unidade || '');
             const quantidadeComprar = prod.quantidadeComprar || '';
             const consumoSemanal = Number(prod.consumoSemanal) || 0;
             const diasRestantes = calcularDiasDeCobertura(estoqueAtual, consumoSemanal);
@@ -659,45 +424,24 @@ function renderizarEstoque() {
 
             const inputId = `input-comprar-${id}`;
 
-            return `
-                <div class="card-produto bg-white p-3 rounded-lg border border-gray-200 shadow-sm flex flex-col gap-2">
-                    <div class="flex justify-between items-start">
-                        <div class="min-w-0">
-                            <h4 class="font-bold text-gray-800 truncate">${nome}</h4>
-                            <p class="text-xs text-gray-500">${formatarMoeda(precoUnitario)}</p>
-                        </div>
-                        <div class="flex gap-2 flex-shrink-0">
-                            <button onclick="editarProduto(${id})" class="px-3 py-1 bg-blue-100 text-blue-700 rounded font-bold text-xs">${t('edit')}</button>
-                            <button onclick="excluirProduto(${id})" class="px-3 py-1 bg-red-100 text-red-700 rounded font-bold text-xs">${t('delete')}</button>
-                        </div>
-                    </div>
-                    <div class="bg-gray-50 p-3 rounded-lg mt-1 flex flex-col gap-2">
-                        <!-- Linha 1: Input de Comprar (com label associado) -->
-                        <div class="flex justify-between items-center">
-                            <label for="${inputId}" class="text-xs font-bold text-gray-500 uppercase">Comprar:</label>
-                            <input id="${inputId}" type="number" min="0" data-id="${id}" value="${quantidadeComprar}" class="input-qtd-comprar font-bold text-lg w-full max-w-[4rem] border rounded px-2 py-1 text-right" />
-                        </div>
-
-                        <!-- Linha 2: Estoque com os botões de - e + (Separado por uma linha sutil) -->
-                        <div class="flex justify-between items-center border-t border-gray-200 pt-2 mt-1">
-                            <span class="text-xs text-gray-500">Estoque: <strong class="font-bold text-lg text-gray-800">${estoqueAtual} ${unidade}</strong></span>
-                            <div class="flex gap-2">
-                                <button onclick="alterarQtd(${id}, -1)" class="w-8 h-8 bg-red-100 text-red-600 rounded-full font-bold flex items-center justify-center">-</button>
-                                <button onclick="alterarQtd(${id}, 1)" class="w-8 h-8 bg-green-100 text-green-600 rounded-full font-bold flex items-center justify-center">+</button>
-                            </div>
-                        </div>
-                    </div>
-                    <p class="text-xs ${duracaoClasse}">${duracaoTexto}</p>
-                </div>
-            `;
+            return renderizarCardProduto({
+                id,
+                nome,
+                precoFormatado: formatarMoeda(precoUnitario),
+                inputId,
+                buyLabel: t('buy_label'),
+                quantidadeComprar,
+                currentStockLabel: t('current_stock'),
+                estoqueAtual,
+                unidade,
+                duracaoTexto,
+                duracaoClasse,
+                editLabel: t('edit'),
+                deleteLabel: t('delete')
+            });
         }).join('');
 
-        lista.innerHTML += `
-            <section class="mb-4">
-                <h4 class="font-semibold text-gray-700 mb-2">${categoria}</h4>
-                <div class="grupo-categoria flex gap-3 overflow-x-auto pb-2">${cards}</div>
-            </section>
-        `;
+        lista.innerHTML += renderizarSecaoCategoria(categoria, cards);
     });
 
     document.getElementById('valor-total-estoque').innerText = formatarMoeda(valorTotal);
@@ -710,7 +454,7 @@ function voltarParaCadastro() {
         formulario.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
     if (inputNome) {
-        // foco após pequeno delay para compatibilidade com scroll suave em mobile
+        // O pequeno atraso evita perda de foco durante o scroll suave em navegadores mobile.
         setTimeout(() => inputNome.focus(), 300);
     }
 }
@@ -742,41 +486,26 @@ function gerarPDF() {
     const corpoTabela = document.getElementById('pdf-tabela-corpo');
     corpoTabela.innerHTML = '';
 
-    document.getElementById('pdf-nome-estab').innerText = appData.configuracoes.empresa || 'Estabelecimento';
+    document.getElementById('pdf-nome-estab').innerText = appData.configuracoes.empresa || t('default_business_name');
     document.getElementById('pdf-data').innerText = new Date().toLocaleDateString(configuracoes.language);
     document.getElementById('pdf-funcionario').innerText = funcionario;
     document.getElementById('pdf-gestor').innerText = document.getElementById('req-gestor').value || t('not_provided');
 
-    const grupos = listaTemporariaCompras.reduce((acc, item) => {
-        const categoria = (item.categoria || 'Sem categoria').trim();
-        if (!acc[categoria]) acc[categoria] = [];
-        acc[categoria].push(item);
-        return acc;
-    }, {});
+    const grupos = agruparItensPorCategoria(listaTemporariaCompras);
 
     Object.entries(grupos).forEach(([categoria, itens]) => {
-        corpoTabela.innerHTML += `
-            <tr>
-                <td colspan="3" class="p-2 border bg-gray-100 font-bold">${categoria}</td>
-            </tr>
-        `;
+        corpoTabela.innerHTML += renderizarPdfCategoria(categoria);
         itens.forEach(item => {
-            corpoTabela.innerHTML += `
-                <tr>
-                    <td class="p-2 border">${item.nome}</td>
-                    <td class="p-2 border text-blue-600 font-bold">${item.diferenca}</td>
-                    <td class="p-2 border">${new Intl.NumberFormat('de-CH', { style: 'currency', currency: 'CHF' }).format(item.custoEstimado)}</td>
-                </tr>
-            `;
+            corpoTabela.innerHTML += renderizarPdfItem(
+                item.nome,
+                item.diferenca,
+                formatarUnidadeExibicao(item.unit || item.unidade || '')
+            );
         });
     });
 
     if (!listaTemporariaCompras.length) {
-        corpoTabela.innerHTML = `
-            <tr>
-                <td colspan="3" class="p-2 border text-center text-gray-500">${t('no_critical_items')}</td>
-            </tr>
-        `;
+        corpoTabela.innerHTML = renderizarPdfSemItens(t('no_critical_items'));
     }
 
     const elementoParaImpressao = document.getElementById('area-impressao');
@@ -795,38 +524,35 @@ function gerarPDF() {
     });
 }
 
-// EXPORTAR E IMPORTAR 
 function exportarEstoque() {
     const jsonString = JSON.stringify(appData, null, 2);
     const blob = new Blob([jsonString], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `backup_estoque_${new Date().toISOString().slice(0,10)}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+
+    const linkDownload = document.createElement('a');
+    linkDownload.href = url;
+    linkDownload.download = `backup_estoque_${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(linkDownload);
+    linkDownload.click();
+    document.body.removeChild(linkDownload);
     URL.revokeObjectURL(url);
 }
 
 function importarEstoque(evento) {
     const arquivo = evento.target.files[0];
     if (!arquivo) return;
-    
+
     const leitor = new FileReader();
-    leitor.onload = function(e) {
+    leitor.onload = function(loadEvent) {
         try {
-            const dadosCarregados = JSON.parse(e.target.result);
-            
-            // Validar versão 2.2
+            const dadosCarregados = JSON.parse(loadEvent.target.result);
+
             if (dadosCarregados.version === '2.2') {
-                // Validar itens
                 if (!dadosCarregados.itens || !Array.isArray(dadosCarregados.itens)) {
                     alert(t('invalid_file'));
                     return;
                 }
-                // Validar estrutura de cada item
+
                 const itensValidos = dadosCarregados.itens.every(item =>
                     item.id !== undefined &&
                     typeof item.nome === 'string' &&
@@ -851,7 +577,6 @@ function importarEstoque(evento) {
                 carregarIdentidade();
                 aplicarConfiguracoesInterface();
                 alert(t('synced_ok'));
-            // Suporta versão antiga
             } else if (dadosCarregados.produtos && Array.isArray(dadosCarregados.produtos)) {
                 localStorage.setItem('nome_estabelecimento', dadosCarregados.estabelecimento || '');
                 produtos = dadosCarregados.produtos;
