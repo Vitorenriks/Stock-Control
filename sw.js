@@ -1,4 +1,4 @@
-const CACHE_VERSION = "estoque-v2.5";
+const CACHE_VERSION = "estoque-v2.6";
 
 const PRECACHE_URLS = [
     './',

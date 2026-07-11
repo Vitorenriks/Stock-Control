@@ -6,11 +6,9 @@
     <title>Organizador de Estoque</title>
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#2563eb">
-    <!-- Dependências locais para funcionamento offline -->
     <script src="./libs/tailwindcss.js"></script>
     <link rel="stylesheet" href="./libs/fontawesome.min.css">
     <style>
-        /* Oculta a área de impressão da tela normal */
         #area-impressao { display: none; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
@@ -21,7 +19,6 @@
 </head>
 <body class="bg-gray-50 text-gray-800 pb-20">
 
-    <!-- Cabeçalho -->
     <header class="bg-blue-900 text-white p-4 shadow-md flex justify-between items-center">
         <div class="flex items-center gap-3 min-w-0">
             <img id="header-logo" src="" alt="Logo" class="w-10 h-10 rounded-full bg-white hidden object-cover flex-shrink-0">
@@ -30,7 +27,6 @@
         <span id="status-local" class="bg-blue-800 text-xs px-2 py-1 rounded border border-blue-700 flex-shrink-0">Modo Local Seguro</span>
     </header>
 
-    <!-- ABA 1: ESTOQUE ATUAL -->
     <main id="tab-estoque" class="tab-content active p-4">
         <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-6">
             <h2 id="titulo-valor-total" class="text-sm text-gray-500 font-bold uppercase mb-1">Valor Total em Estoque</h2>
@@ -92,7 +88,6 @@
 
         <h3 id="titulo-meu-estoque" class="font-bold text-lg mb-3">Meu Estoque</h3>
         <div id="lista-produtos" class="space-y-3 min-w-0 break-words">
-            <!-- Produtos serão injetados aqui via JS -->
         </div>
 
         <div class="flex justify-center w-full py-8" aria-hidden="false">
@@ -101,7 +96,6 @@
 
     </main>
 
-    <!-- ABA 2: NOVA COMPRA (PDF) -->
     <main id="tab-compra" class="tab-content p-4">
         <h2 id="titulo-solicitacao-compra" class="font-bold text-xl mb-4">Solicitação de Compra</h2>
         <div class="bg-white p-4 rounded-lg shadow-sm mb-4">
@@ -120,7 +114,6 @@
         <p id="texto-estoque-baixo" class="text-sm text-gray-500 text-center">Os itens com estoque baixo serão incluídos automaticamente no pedido.</p>
     </main>
 
-    <!-- ABA 3: CONFIGURAÇÕES & BACKUP -->
     <main id="tab-config" class="tab-content p-4">
         <h2 id="titulo-configuracoes" class="font-bold text-xl mb-4">Configurações do App</h2>
         
@@ -166,7 +159,6 @@
         </div>
     </main>
 
-    <!-- Menu Inferior (Bottom Navigation) -->
     <nav class="fixed bottom-0 w-full bg-white border-t border-gray-200 flex justify-around p-3 text-sm">
         <button onclick="mudarAba('tab-estoque')" class="flex flex-col items-center text-blue-600" id="btn-tab-estoque">
             <i class="fas fa-box text-xl mb-1"></i> <span id="nav-estoque-texto">Estoque</span>
@@ -179,7 +171,6 @@
         </button>
     </nav>
 
-    <!-- Layout Escondido para o PDF -->
     <div id="area-impressao" class="p-8 bg-white text-black w-[800px]">
         <h1 class="text-2xl font-bold mb-1" id="pdf-nome-estab">Estabelecimento</h1>
         <p id="pdf-titulo" class="text-gray-500 mb-6">Relatório de Necessidade de Compras</p>
@@ -199,16 +190,13 @@
                 </tr>
             </thead>
             <tbody id="pdf-tabela-corpo">
-                <!-- Preenchido via JS -->
             </tbody>
         </table>
     </div>
 
-    <!-- Bibliotecas locais -->
     <script src="./libs/jspdf.umd.min.js" defer></script>
-    <script src="./libs/html2pdf.bundle.min.js" defer></script>
+    <script src="./libs/html2pdf.bundle.min.js?v=2" defer></script>
 
-    <!-- SCRIPT DE FUNCIONAMENTO (A Lógica do App) -->
     <script src="js/i18n.js" defer></script>
     <script src="js/ui.js" defer></script>
     <script src="js/app.js" defer></script>

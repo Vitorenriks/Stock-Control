@@ -502,7 +502,7 @@ function voltarParaCadastro() {
         formulario.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
     if (inputNome) {
-        // O pequeno atraso evita perda de foco durante o scroll suave em navegadores mobile.
+        // Evita perda de foco durante scroll suave em mobile.
         setTimeout(() => inputNome.focus(), 300);
     }
 }
