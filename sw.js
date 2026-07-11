@@ -1,4 +1,4 @@
-const CACHE_VERSION = "estoque-v2.4";
+const CACHE_VERSION = "estoque-v2.5";
 
 const PRECACHE_URLS = [
     './',
@@ -15,7 +15,8 @@ const PRECACHE_URLS = [
     './libs/html2pdf.bundle.min.js',
     './libs/webfonts/fa-solid-900.woff2',
     './libs/webfonts/fa-regular-400.woff2',
-    './libs/webfonts/fa-brands-400.woff2'
+    './libs/webfonts/fa-brands-400.woff2',
+    './libs/webfonts/fa-v4compatibility.woff2'
 ];
 
 self.addEventListener('install', (event) => {

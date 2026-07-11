@@ -530,6 +530,19 @@ function gerarPDF() {
     const funcionario = document.getElementById('req-funcionario').value;
     if(!funcionario) return alert(t('required_employee'));
 
+    console.log('Verificação da biblioteca:', typeof window.html2pdf);
+
+    const html2pdfDisponivel =
+        (typeof window.html2pdf === 'function' && window.html2pdf) ||
+        (typeof html2pdf === 'function' && html2pdf) ||
+        null;
+
+    if (!html2pdfDisponivel) {
+        console.error('Biblioteca html2pdf indisponível no momento do clique.');
+        alert('Falha ao gerar PDF: biblioteca html2pdf não carregada.');
+        return;
+    }
+
     const listaTemporariaCompras = montarListaTemporariaCompras();
     const corpoTabela = document.getElementById('pdf-tabela-corpo');
     corpoTabela.innerHTML = '';
@@ -567,7 +580,7 @@ function gerarPDF() {
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
-    html2pdf().set(opt).from(elementoParaImpressao).save().then(() => {
+    html2pdfDisponivel().set(opt).from(elementoParaImpressao).save().then(() => {
         elementoParaImpressao.style.display = 'none';
     });
 }
