@@ -6,13 +6,9 @@
     <title>Organizador de Estoque</title>
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#2563eb">
-    <!-- Tailwind CSS para o Design Moderno -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Biblioteca para gerar PDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <!-- Ícones -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Dependências locais para funcionamento offline -->
+    <script src="./libs/tailwindcss.js"></script>
+    <link rel="stylesheet" href="./libs/fontawesome.min.css">
     <style>
         /* Oculta a área de impressão da tela normal */
         #area-impressao { display: none; }
@@ -207,6 +203,10 @@
             </tbody>
         </table>
     </div>
+
+    <!-- Bibliotecas locais -->
+    <script src="./libs/jspdf.umd.min.js" defer></script>
+    <script src="./libs/html2pdf.bundle.min.js" defer></script>
 
     <!-- SCRIPT DE FUNCIONAMENTO (A Lógica do App) -->
     <script src="js/i18n.js" defer></script>

@@ -53,10 +53,16 @@
     }
 
     function renderizarSecaoCategoria(categoria, cardsHtml) {
+        const categoriaSegura = String(categoria || '')
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+
         return `
             <section class="mb-4">
                 <h4 class="font-semibold text-gray-700 mb-2">${categoria}</h4>
-                <div class="grupo-categoria flex gap-3 overflow-x-auto pb-2">${cardsHtml}</div>
+                <div class="grupo-categoria flex gap-3 overflow-x-auto pb-2" data-categoria="${categoriaSegura}">${cardsHtml}</div>
             </section>
         `;
     }

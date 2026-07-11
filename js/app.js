@@ -1,3 +1,11 @@
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js', { scope: './' }).catch((erro) => {
+            console.error('Falha ao registrar Service Worker:', erro);
+        });
+    });
+}
+
 const {
     traducoes,
     moedas,
@@ -363,6 +371,23 @@ function salvarERenderizar() {
     renderizarEstoque();
 }
 
+function capturarScrollDosCarrosseis() {
+    const posicoes = new Map();
+    document.querySelectorAll('#lista-produtos .grupo-categoria[data-categoria]').forEach((container) => {
+        posicoes.set(container.dataset.categoria, container.scrollLeft || 0);
+    });
+    return posicoes;
+}
+
+function restaurarScrollDosCarrosseis(posicoes) {
+    document.querySelectorAll('#lista-produtos .grupo-categoria[data-categoria]').forEach((container) => {
+        const scrollSalvo = posicoes.get(container.dataset.categoria);
+        if (typeof scrollSalvo === 'number') {
+            container.scrollLeft = scrollSalvo;
+        }
+    });
+}
+
 function calcularConsumoDiario(consumoSemanal) {
     const consumoNormalizado = Number(consumoSemanal) || 0;
     return consumoNormalizado > 0 ? consumoNormalizado / 7 : 0;
@@ -375,8 +400,29 @@ function calcularDiasDeCobertura(estoqueAtual, consumoSemanal) {
     return estoqueNormalizado / consumoDiario;
 }
 
+function arredondarParaCima(valor, casasDecimais) {
+    const fator = 10 ** casasDecimais;
+    return Math.ceil(valor * fator) / fator;
+}
+
+function normalizarQuantidadeCompra(quantidade, unidade) {
+    const quantidadeNormalizada = Math.max(0, Number(quantidade) || 0);
+    const unidadeNormalizada = (unidade || '').toLowerCase();
+
+    if (['pct', 'unidade', 'caixa', 'gr'].includes(unidadeNormalizada)) {
+        return Math.ceil(quantidadeNormalizada);
+    }
+
+    if (unidadeNormalizada === 'kg') {
+        return arredondarParaCima(quantidadeNormalizada, 3);
+    }
+
+    return arredondarParaCima(quantidadeNormalizada, 2);
+}
+
 function calcularNecessidadeDeReposicao(produto) {
-    const estoqueAtual = Number(produto.estoqueAtual) || 0;
+    const unidade = produto.unit || produto.unidade || '';
+    const estoqueAtual = Math.max(0, Number(produto.estoqueAtual) || 0);
     const consumoSemanal = Number(produto.consumoSemanal) || 0;
     const diasDeCobertura = calcularDiasDeCobertura(estoqueAtual, consumoSemanal);
 
@@ -389,7 +435,7 @@ function calcularNecessidadeDeReposicao(produto) {
         };
     }
 
-    const diferenca = Math.max(0, consumoSemanal - estoqueAtual);
+    const diferenca = normalizarQuantidadeCompra(consumoSemanal - estoqueAtual, unidade);
     return {
         precisaComprar: diferenca > 0,
         diferenca,
@@ -400,6 +446,7 @@ function calcularNecessidadeDeReposicao(produto) {
 
 function renderizarEstoque() {
     const lista = document.getElementById('lista-produtos');
+    const posicoesScroll = capturarScrollDosCarrosseis();
     lista.innerHTML = '';
     let valorTotal = 0;
 
@@ -445,6 +492,7 @@ function renderizarEstoque() {
     });
 
     document.getElementById('valor-total-estoque').innerText = formatarMoeda(valorTotal);
+    restaurarScrollDosCarrosseis(posicoesScroll);
 }
 
 function voltarParaCadastro() {
