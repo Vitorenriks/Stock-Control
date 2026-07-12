@@ -20,21 +20,25 @@ O sistema é multi-idioma e multi-moeda, configurável diretamente nas Configura
 
 ## Screenshots
 
-**Abertura do App**
+<p>
+  <b>Abertura do App</b><br>
+  <img src="assets/Abertura-APP.png" width="300" alt="Abertura do App">
+</p>
 
-![Abertura do App](assets/Abertura-APP.png)
+<p>
+  <b>Dashboard / Estoque</b><br>
+  <img src="assets/Dashboard-Estoque.png" width="300" alt="Dashboard de Estoque">
+</p>
 
-**Dashboard / Estoque**
+<p>
+  <b>Solicitação de Compra</b><br>
+  <img src="assets/Solicitacao-Compra.png" width="300" alt="Solicitação de Compra">
+</p>
 
-![Dashboard de Estoque](assets/Dashboard-Estoque.png)
-
-**Solicitação de Compra**
-
-![Solicitação de Compra](assets/Solicitacao-Compra.png)
-
-**Configurações e Backup**
-
-![Configurações e Backup](assets/Backup-Configuracoes.png)
+<p>
+  <b>Configurações e Backup</b><br>
+  <img src="assets/Backup-Configuracoes.png" width="300" alt="Configurações e Backup">
+</p>
 
 ## Guia de Instalação (PWA)
 
