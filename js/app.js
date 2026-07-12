@@ -24,6 +24,32 @@ const {
 
 const DIAS_COBERTURA_META = 7;
 
+function mostrarNotificacao(mensagem, tipo = 'erro') {
+    const toast = document.getElementById('toast-notificacao');
+    const toastMensagem = document.getElementById('toast-mensagem');
+    toastMensagem.textContent = mensagem;
+
+    if (tipo === 'erro') {
+        toast.classList.remove('bg-green-600');
+        toast.classList.add('bg-red-600');
+    } else {
+        toast.classList.remove('bg-red-600');
+        toast.classList.add('bg-green-600');
+    }
+
+    toast.classList.remove('hidden');
+    setTimeout(() => {
+        toast.classList.remove('opacity-0');
+        toast.classList.add('opacity-100');
+    }, 10);
+
+    setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0');
+        setTimeout(() => toast.classList.add('hidden'), 300);
+    }, 3000);
+}
+
 function carregarConfiguracoesSalvas() {
     try {
         const persistedAppData = JSON.parse(localStorage.getItem('app_data'));
@@ -107,6 +133,17 @@ function salvarEstadoLocal() {
     appData.itens = produtos;
     localStorage.setItem('app_data', JSON.stringify(appData));
     localStorage.setItem('lista_produtos', JSON.stringify(produtos));
+}
+
+function aplicarTextosPorChave() {
+    document.querySelectorAll('[data-i18n]').forEach((elemento) => {
+        const chave = elemento.dataset.i18n;
+        if (!chave) {
+            return;
+        }
+
+        elemento.textContent = t(chave);
+    });
 }
 
 function aplicarTraducoes() {
@@ -253,10 +290,31 @@ function aplicarConfiguracoesInterface() {
     traduzirListaDeUnidades();
     traduzirSeletoresConfiguracao();
     aplicarTraducoes();
+    aplicarTextosPorChave();
     document.getElementById('config-idioma').value = traducoes[configuracoes.language] ? configuracoes.language : 'pt-BR';
     document.getElementById('config-moeda').value = moedas[configuracoes.currency] ? configuracoes.currency : 'BRL';
     carregarIdentidade();
     renderizarEstoque();
+}
+
+function abrirModalAjuda() {
+    aplicarConfiguracoesInterface();
+
+    const modalAjuda = document.getElementById('modal-ajuda');
+    if (!modalAjuda) {
+        return;
+    }
+
+    modalAjuda.classList.remove('hidden');
+}
+
+function fecharModalAjuda() {
+    const modalAjuda = document.getElementById('modal-ajuda');
+    if (!modalAjuda) {
+        return;
+    }
+
+    modalAjuda.classList.add('hidden');
 }
 
 function salvarPreferencias() {
@@ -295,7 +353,7 @@ function salvarIdentidade() {
     localStorage.setItem('app_data', JSON.stringify(appData));
     localStorage.setItem('nome_estabelecimento', nome);
     carregarIdentidade();
-    alert(t('name_saved'));
+    mostrarNotificacao(t('name_saved'), 'erro');
 }
 
 document.getElementById('form-produto').addEventListener('submit', function(event) {
@@ -528,7 +586,7 @@ function montarListaTemporariaCompras() {
 
 function gerarPDF() {
     const funcionario = document.getElementById('req-funcionario').value;
-    if(!funcionario) return alert(t('required_employee'));
+    if(!funcionario) return mostrarNotificacao(t('required_employee'), 'erro');
 
     console.log('Verificação da biblioteca:', typeof window.html2pdf);
 
@@ -539,7 +597,7 @@ function gerarPDF() {
 
     if (!html2pdfDisponivel) {
         console.error('Biblioteca html2pdf indisponível no momento do clique.');
-        alert('Falha ao gerar PDF: biblioteca html2pdf não carregada.');
+        mostrarNotificacao('Falha ao gerar PDF: biblioteca html2pdf não carregada.', 'erro');
         return;
     }
 
@@ -610,7 +668,7 @@ function importarEstoque(evento) {
 
             if (dadosCarregados.version === '2.2') {
                 if (!dadosCarregados.itens || !Array.isArray(dadosCarregados.itens)) {
-                    alert(t('invalid_file'));
+                    mostrarNotificacao(t('invalid_file'), 'erro');
                     return;
                 }
 
@@ -622,7 +680,7 @@ function importarEstoque(evento) {
                     typeof item.quantidadeComprar === 'number'
                 );
                 if (!itensValidos) {
-                    alert(t('invalid_file'));
+                    mostrarNotificacao(t('invalid_file'), 'erro');
                     return;
                 }
                 appData = dadosCarregados;
@@ -637,7 +695,7 @@ function importarEstoque(evento) {
                 salvarERenderizar();
                 carregarIdentidade();
                 aplicarConfiguracoesInterface();
-                alert(t('synced_ok'));
+                mostrarNotificacao(t('synced_ok'), 'erro');
             } else if (dadosCarregados.produtos && Array.isArray(dadosCarregados.produtos)) {
                 localStorage.setItem('nome_estabelecimento', dadosCarregados.estabelecimento || '');
                 produtos = dadosCarregados.produtos;
@@ -651,12 +709,12 @@ function importarEstoque(evento) {
                 salvarERenderizar();
                 carregarIdentidade();
                 aplicarConfiguracoesInterface();
-                alert(t('synced_ok'));
+                mostrarNotificacao(t('synced_ok'), 'erro');
             } else {
-                alert(t('invalid_file'));
+                mostrarNotificacao(t('invalid_file'), 'erro');
             }
         } catch (erro) {
-            alert(t('read_error'));
+            mostrarNotificacao(t('read_error'), 'erro');
         }
     };
     leitor.readAsText(arquivo);

@@ -24,7 +24,12 @@
             <img id="header-logo" src="" alt="Logo" class="w-10 h-10 rounded-full bg-white hidden object-cover flex-shrink-0">
             <h1 id="header-name" class="font-bold text-lg min-w-0 truncate">Meu Estabelecimento</h1>
         </div>
-        <span id="status-local" class="bg-blue-800 text-xs px-2 py-1 rounded border border-blue-700 flex-shrink-0">Modo Local Seguro</span>
+        <div class="ml-auto flex items-center gap-2">
+            <button onclick="abrirModalAjuda()" class="text-gray-500 hover:text-indigo-600 transition-colors p-2" title="Central de Ajuda">
+                <i class="fa-solid fa-circle-question text-2xl"></i>
+            </button>
+            <span id="status-local" class="bg-blue-800 text-xs px-2 py-1 rounded border border-blue-700 flex-shrink-0">Modo Local Seguro</span>
+        </div>
     </header>
 
     <main id="tab-estoque" class="tab-content active p-4">
@@ -200,6 +205,86 @@
     <script src="js/i18n.js" defer></script>
     <script src="js/ui.js" defer></script>
     <script src="js/app.js" defer></script>
+
+    <!-- Modal de Ajuda Completo -->
+    <div id="modal-ajuda" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 transition-opacity">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b p-5 sticky top-0 bg-white rounded-t-xl z-10">
+                <h3 class="text-xl font-bold text-gray-800">
+                    <i class="fa-solid fa-circle-info text-indigo-600 mr-2"></i><span data-i18n="ajuda_titulo">Central de Ajuda</span>
+                </h3>
+                <button onclick="fecharModalAjuda()" class="text-gray-500 hover:text-red-500 text-2xl font-bold">&times;</button>
+            </div>
+
+            <div class="p-6 space-y-8">
+                <section>
+                    <h4 class="font-bold text-gray-900 text-lg mb-3 flex items-center">
+                        <i class="fa-solid fa-mobile-screen mr-2 text-indigo-500"></i><span data-i18n="ajuda_manual_titulo">Manual do Sistema</span>
+                    </h4>
+                    <ul class="space-y-4 text-sm text-gray-700">
+                        <li class="flex items-start">
+                            <i class="fa-solid fa-download text-green-500 mt-1 mr-3"></i>
+                            <div>
+                                <strong data-i18n="ajuda_inst_titulo">1. Instalação:</strong>
+                                <span data-i18n="ajuda_inst_texto">No Android/iOS, toque no ícone azul no canto inferior direito da tela. No computador, clique no ícone de instalação na barra de endereços (canto superior direito, próximo à estrela de favoritos).</span>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fa-solid fa-table-columns text-blue-500 mt-1 mr-3"></i>
+                            <div>
+                                <strong data-i18n="ajuda_dash_titulo">2. Dashboard:</strong>
+                                <span data-i18n="ajuda_dash_texto">Na tela inicial, cadastre e preencha as informações dos produtos. O sistema fará todos os cálculos automaticamente com base nestes dados.</span>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fa-solid fa-cart-shopping text-orange-500 mt-1 mr-3"></i>
+                            <div>
+                                <strong data-i18n="ajuda_compra_titulo">3. Compras e PDF:</strong>
+                                <span data-i18n="ajuda_compra_texto">No menu Compras, preencha o nome do funcionário solicitante para gerar o PDF. Você pode manipular manualmente as quantidades a serem compradas para se adequar a semanas de maior movimento.</span>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fa-solid fa-gear text-gray-500 mt-1 mr-3"></i>
+                            <div>
+                                <strong data-i18n="ajuda_config_titulo">4. Configurações & Backup:</strong>
+                                <span data-i18n="ajuda_config_texto">Altere o idioma e a moeda local com apenas alguns cliques. Nesta mesma tela, você pode realizar o backup dos seus dados através da Sincronização Local-First.</span>
+                            </div>
+                        </li>
+                    </ul>
+                </section>
+
+                <hr class="border-gray-200">
+
+                <section>
+                    <h4 class="font-bold text-gray-900 text-lg mb-3 flex items-center">
+                        <i class="fa-solid fa-brain mr-2 text-indigo-500"></i><span data-i18n="ajuda_op_titulo">Guia de Operação</span>
+                    </h4>
+                    <div class="space-y-4 text-sm text-gray-700">
+                        <div class="border-l-4 border-indigo-500 pl-3">
+                            <strong data-i18n="ajuda_calc_titulo">Cálculo Cirúrgico:</strong>
+                            <span data-i18n="ajuda_calc_texto">O sistema calcula com precisão matemática. Exemplo: se a meta de uso é de 3 caixas/semana e você informa ter 2, o sistema sugerirá comprar exatamente 1 caixa.</span>
+                        </div>
+                        <div class="border-l-4 border-blue-500 pl-3">
+                            <strong data-i18n="ajuda_demanda_titulo">Ajuste de Demanda:</strong>
+                            <span data-i18n="ajuda_demanda_texto">Adapte suas metas em caso de alta ou baixa demanda (feriados, eventos). O algoritmo depende das suas estimativas reais para ser preciso.</span>
+                        </div>
+                        <div class="border-l-4 border-red-500 pl-3">
+                            <strong data-i18n="ajuda_invent_titulo">Inventário Semanal:</strong>
+                            <span data-i18n="ajuda_invent_texto">Para evitar rupturas, é obrigatório fazer a contagem física do estoque semanalmente antes de gerar o PDF. O sistema confia no que você digita!</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="bg-gray-50 p-4 border-t text-center rounded-b-xl">
+                <button onclick="fecharModalAjuda()" class="bg-indigo-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-indigo-700 w-full transition-colors" data-i18n="ajuda_botao_entendi">Entendi</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-notificacao" class="hidden fixed bottom-5 left-1/2 transform -translate-x-1/2 md:left-auto md:right-5 md:translate-x-0 px-6 py-3 rounded-lg shadow-lg text-white font-bold z-50 transition-opacity duration-300 opacity-0">
+        <span id="toast-mensagem"></span>
+    </div>
 
 </body>
 </html>
