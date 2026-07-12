@@ -1,7 +1,73 @@
+let pendingWorker = null;
+let refreshing = false;
+
+function exibirBannerAtualizacao() {
+    const updateBanner = document.getElementById('update-banner');
+    if (updateBanner) {
+        updateBanner.classList.remove('hidden');
+    }
+}
+
+function configurarFluxoAtualizacaoServiceWorker(registration) {
+    const updateButton = document.getElementById('btn-update-app');
+    const previousController = navigator.serviceWorker.controller;
+
+    if (updateButton) {
+        updateButton.addEventListener('click', () => {
+            if (pendingWorker) {
+                pendingWorker.postMessage({ type: 'SKIP_WAITING' });
+            }
+        });
+    }
+
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (refreshing || !previousController) {
+            return;
+        }
+
+        refreshing = true;
+        window.location.reload();
+    });
+
+    const prepararAtualizacao = (worker) => {
+        pendingWorker = worker;
+        exibirBannerAtualizacao();
+    };
+
+    if (registration.waiting) {
+        prepararAtualizacao(registration.waiting);
+    }
+
+    registration.addEventListener('updatefound', () => {
+        const novoWorker = registration.installing;
+        if (!novoWorker) {
+            return;
+        }
+
+        novoWorker.addEventListener('statechange', () => {
+            if (novoWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                prepararAtualizacao(novoWorker);
+            }
+        });
+    });
+
+    setInterval(() => {
+        registration.update().catch((erro) => {
+            console.error('Falha ao verificar atualizacao do Service Worker:', erro);
+        });
+    }, 60 * 60 * 1000);
+}
+
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js', { scope: './' }).catch((erro) => {
             console.error('Falha ao registrar Service Worker:', erro);
+        });
+
+        navigator.serviceWorker.ready.then((registration) => {
+            configurarFluxoAtualizacaoServiceWorker(registration);
+        }).catch((erro) => {
+            console.error('Falha ao configurar fluxo de atualizacao do Service Worker:', erro);
         });
     });
 }
