@@ -44,7 +44,7 @@ O sistema é multi-idioma e multi-moeda, configurável diretamente nas Configura
 
 O Stock Control não precisa ser baixado de nenhuma loja de aplicativos. A instalação é feita diretamente pelo navegador.
 
-**Acesse:** [https://l1nq.com/stock-control](https://l1nq.com/stock-control)
+**Acesse:** [https://vitorenriks.github.io/Stock-Control/]
 
 ### Chrome / Edge (Desktop)
 1. Acesse o link do projeto.
