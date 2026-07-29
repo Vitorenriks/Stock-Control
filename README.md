@@ -81,4 +81,4 @@ O **Stock Control** foi concebido com uma arquitetura *Offline-First*, focada em
 
 Encontrou um bug ou tem sugestão de melhoria? Abra uma issue na seção **Issues** do repositório no GitHub, descrevendo o problema encontrado ou a funcionalidade sugerida.
 
-[https://l1nq.com/stock-control]
+[https://vitorenriks.github.io/Stock-Control/]
