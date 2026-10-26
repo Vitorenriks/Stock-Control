@@ -1,202 +1,371 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Organizador de Estoque</title>
     <link rel="manifest" href="./manifest.json">
-    <meta name="theme-color" content="#2563eb">
+    <meta name="theme-color" content="#1e3a8a">
+    <meta name="description" content="Controle de estoque offline-first com geracao de pedido de compra em PDF.">
+    <link rel="apple-touch-icon" href="./icons/icon-192.png">
+
+    <script>
+        // Aplica o tema antes da primeira pintura para evitar piscada de cor.
+        (function () {
+            try {
+                const preferencia = localStorage.getItem('tema_app') || 'sistema';
+                const sistemaEscuro = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const escuro = preferencia === 'escuro' || (preferencia === 'sistema' && sistemaEscuro);
+                document.documentElement.classList.toggle('dark', escuro);
+            } catch (erro) {
+                // localStorage indisponivel: segue no tema claro.
+            }
+        })();
+    </script>
+
     <script src="./libs/tailwindcss.js"></script>
+    <script>
+        // Guarda contra cache corrompido do tailwindcss.js: sem ela um erro aqui
+        // vira excecao nao tratada no console a cada carregamento.
+        if (typeof tailwind !== 'undefined') {
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            sans: ['system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif']
+                        }
+                    }
+                }
+            };
+        }
+    </script>
     <link rel="stylesheet" href="./libs/fontawesome.min.css">
     <style>
         #area-impressao { display: none; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        .editing-mode { outline: 2px solid #2563eb; }
-        .grupo-categoria { scroll-snap-type: x proximity; }
-        .card-produto { min-width: 280px; scroll-snap-align: start; }
+        .form-editando { box-shadow: 0 0 0 2px #2563eb inset; }
+        [hidden] { display: none !important; }
+        .barra-navegacao { padding-bottom: calc(0.5rem + env(safe-area-inset-bottom)); }
+        /* Remove as setas do input number para a quantidade a comprar ficar legivel no mobile. */
+        .input-qtd-comprar::-webkit-outer-spin-button,
+        .input-qtd-comprar::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .input-qtd-comprar { -moz-appearance: textfield; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 pb-20">
+<body class="min-h-screen bg-slate-50 pb-28 font-sans text-slate-800 antialiased dark:bg-slate-900 dark:text-slate-200">
 
-    <header class="bg-blue-900 text-white p-4 shadow-md flex justify-between items-center">
-        <div class="flex items-center gap-3 min-w-0">
-            <img id="header-logo" src="" alt="Logo" class="w-10 h-10 rounded-full bg-white hidden object-cover flex-shrink-0">
-            <h1 id="header-name" class="font-bold text-lg min-w-0 truncate">Meu Estabelecimento</h1>
-        </div>
-        <div class="ml-auto flex items-center gap-2">
-            <button onclick="abrirModalAjuda()" class="text-gray-500 hover:text-indigo-600 transition-colors p-2" title="Central de Ajuda">
-                <i class="fa-solid fa-circle-question text-2xl"></i>
-            </button>
-            <span id="status-local" class="bg-blue-800 text-xs px-2 py-1 rounded border border-blue-700 flex-shrink-0">Modo Local Seguro</span>
+    <a href="#conteudo-principal" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-blue-600 focus:px-4 focus:py-2 focus:text-white">
+        <span id="link-pular">Ir para o conteudo</span>
+    </a>
+
+    <header class="sticky top-0 z-30 border-b border-blue-800/40 bg-gradient-to-r from-blue-900 to-blue-800 text-white shadow-sm">
+        <div class="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
+            <img id="header-logo" src="" alt="" class="hidden h-10 w-10 shrink-0 rounded-full bg-white object-cover">
+            <div class="min-w-0 flex-1">
+                <h1 id="header-name" class="truncate text-lg font-bold leading-tight">Meu Estabelecimento</h1>
+                <p id="status-local" class="truncate text-xs text-blue-200">Modo Local Seguro</p>
+            </div>
+            <div class="flex shrink-0 items-center gap-1">
+                <button type="button" id="btn-tema" onclick="alternarTema()" class="flex h-10 w-10 items-center justify-center rounded-lg text-blue-100 transition hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60" title="Tema" aria-label="Tema">
+                    <i id="icone-tema" class="fa-solid fa-moon text-lg" aria-hidden="true"></i>
+                </button>
+                <button type="button" id="btn-ajuda" onclick="abrirModalAjuda()" class="flex h-10 w-10 items-center justify-center rounded-lg text-blue-100 transition hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60" title="Central de Ajuda" aria-label="Central de Ajuda">
+                    <i class="fa-solid fa-circle-question text-lg" aria-hidden="true"></i>
+                </button>
+            </div>
         </div>
     </header>
 
-    <main id="tab-estoque" class="tab-content active p-4">
-        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-6">
-            <h2 id="titulo-valor-total" class="text-sm text-gray-500 font-bold uppercase mb-1">Valor Total em Estoque</h2>
-            <p class="text-3xl font-black text-blue-600" id="valor-total-estoque">R$ 0,00</p>
-        </div>
+    <div id="conteudo-principal" class="mx-auto max-w-6xl">
 
-        <h3 id="titulo-adicionar-produto" class="font-bold text-lg mb-3">Adicionar Produto</h3>
-        <form id="form-produto" class="grid grid-cols-2 gap-3 mb-6 bg-white p-4 rounded-lg shadow-sm">
-            <input type="hidden" id="produto-editando-id" value="">
+        <main id="tab-estoque" class="tab-content active px-4 py-5">
 
-            <div class="col-span-2 min-w-0">
-                <label id="label-prod-nome" for="prod-nome" class="block text-sm font-medium text-gray-700 mb-1">Nome do Produto</label>
-                <input type="text" id="prod-nome" placeholder="Produto" data-i18n-placeholder="product_name" data-placeholder-default="Nome (Ex: Tomate)" class="i18n-placeholder w-full min-w-0 border p-3 rounded break-words" required>
+            <section aria-labelledby="titulo-indicadores" class="mb-6">
+                <h2 id="titulo-indicadores" class="sr-only">Indicadores</h2>
+                <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+                        <p id="titulo-valor-total" class="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Valor em estoque</p>
+                        <p class="mt-1 truncate text-2xl font-black text-blue-600 dark:text-blue-400" id="valor-total-estoque">R$ 0,00</p>
+                    </div>
+                    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+                        <p id="titulo-stat-itens" class="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Produtos</p>
+                        <p class="mt-1 text-2xl font-black text-slate-800 dark:text-slate-100" id="stat-itens">0</p>
+                    </div>
+                    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+                        <p id="titulo-stat-comprar" class="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Itens a comprar</p>
+                        <p class="mt-1 text-2xl font-black text-amber-600 dark:text-amber-400" id="stat-a-comprar">0</p>
+                    </div>
+                    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+                        <p id="titulo-stat-custo" class="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Custo estimado</p>
+                        <p class="mt-1 truncate text-2xl font-black text-slate-800 dark:text-slate-100" id="stat-custo-estimado">R$ 0,00</p>
+                    </div>
+                </div>
+            </section>
+
+            <section aria-labelledby="titulo-meu-estoque">
+                <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+                    <h2 id="titulo-meu-estoque" class="text-xl font-bold text-slate-900 dark:text-slate-100">Meu Estoque</h2>
+                    <button type="button" id="btn-novo-produto-topo" onclick="abrirModalProduto()" class="hidden items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 font-bold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 sm:inline-flex">
+                        <i class="fa-solid fa-plus" aria-hidden="true"></i><span id="texto-novo-produto-topo">Novo Produto</span>
+                    </button>
+                </div>
+
+                <div class="mb-6 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+                    <div class="grid gap-3 md:grid-cols-[2fr_1fr_1fr_1fr_auto]">
+                        <div class="min-w-0">
+                            <label id="label-busca" for="filtro-busca" class="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Buscar</label>
+                            <div class="relative">
+                                <i class="fa-solid fa-magnifying-glass pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400" aria-hidden="true"></i>
+                                <input type="search" id="filtro-busca" placeholder="Buscar produto..." data-i18n-placeholder="search_placeholder" data-placeholder-default="Buscar produto..." class="i18n-placeholder w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-9 pr-3 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
+                            </div>
+                        </div>
+                        <div class="min-w-0">
+                            <label id="label-filtro-categoria" for="filtro-categoria" class="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Categoria</label>
+                            <select id="filtro-categoria" class="w-full rounded-lg border border-slate-300 bg-white py-2.5 px-3 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"></select>
+                        </div>
+                        <div class="min-w-0">
+                            <label id="label-filtro-status" for="filtro-status" class="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Situacao</label>
+                            <select id="filtro-status" class="w-full rounded-lg border border-slate-300 bg-white py-2.5 px-3 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"></select>
+                        </div>
+                        <div class="min-w-0">
+                            <label id="label-ordem" for="filtro-ordem" class="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Ordenar por</label>
+                            <select id="filtro-ordem" class="w-full rounded-lg border border-slate-300 bg-white py-2.5 px-3 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"></select>
+                        </div>
+                        <div class="flex items-end">
+                            <button type="button" id="btn-limpar-filtros" onclick="limparFiltros()" class="w-full whitespace-nowrap rounded-lg border border-slate-300 px-3 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700">Limpar filtros</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="lista-produtos"></div>
+            </section>
+        </main>
+
+        <main id="tab-compra" class="tab-content px-4 py-5">
+            <h2 id="titulo-solicitacao-compra" class="mb-1 text-xl font-bold text-slate-900 dark:text-slate-100">Solicitacao de Compra</h2>
+            <p id="texto-estoque-baixo" class="mb-5 text-sm text-slate-500 dark:text-slate-400">Os itens com estoque baixo serao incluidos automaticamente no pedido.</p>
+
+            <section class="mb-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800" aria-labelledby="titulo-requisitante">
+                <h3 id="titulo-requisitante" class="mb-3 font-bold text-slate-700 dark:text-slate-200">Dados do solicitante</h3>
+                <div class="grid gap-3 sm:grid-cols-2">
+                    <div class="min-w-0">
+                        <label id="label-req-funcionario" for="req-funcionario" class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Nome do Funcionario</label>
+                        <input type="text" id="req-funcionario" placeholder="Nome do Funcionario" data-i18n-placeholder="employee_name" data-placeholder-default="Nome do Funcionario" class="i18n-placeholder w-full rounded-lg border border-slate-300 bg-white p-3 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100" required>
+                    </div>
+                    <div class="min-w-0">
+                        <label id="label-req-gestor" for="req-gestor" class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Nome do Gestor (Opcional)</label>
+                        <input type="text" id="req-gestor" placeholder="Nome do Gestor (Opcional)" data-i18n-placeholder="manager_name_optional" data-placeholder-default="Nome do Gestor (Opcional)" class="i18n-placeholder w-full rounded-lg border border-slate-300 bg-white p-3 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
+                    </div>
+                </div>
+            </section>
+
+            <section aria-labelledby="titulo-previsao">
+                <div class="mb-3 flex flex-wrap items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <h3 id="titulo-previsao" class="font-bold text-slate-800 dark:text-slate-100">Pre-visualizacao do pedido</h3>
+                        <p id="texto-previsao" class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">Esta e exatamente a lista que saira no PDF.</p>
+                    </div>
+                    <button type="button" id="btn-restaurar-sugestoes" onclick="restaurarSugestoes()" class="whitespace-nowrap rounded-lg border border-slate-300 px-3 py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700">
+                        <i class="fa-solid fa-rotate-left mr-1" aria-hidden="true"></i>Restaurar sugestoes
+                    </button>
+                </div>
+
+                <div id="lista-pedido" class="mb-4"></div>
+
+                <div id="resumo-pedido" class="sticky bottom-24 rounded-2xl border border-blue-200 bg-blue-50 p-4 shadow-sm dark:border-blue-500/30 dark:bg-blue-500/10">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div class="min-w-0">
+                            <p id="label-total-pedido" class="text-[11px] font-bold uppercase tracking-wide text-blue-700 dark:text-blue-300">Total estimado do pedido</p>
+                            <p class="mt-0.5 truncate text-2xl font-black text-blue-800 dark:text-blue-200" id="resumo-pedido-total">R$ 0,00</p>
+                            <p class="mt-0.5 text-xs text-blue-700 dark:text-blue-300" id="resumo-pedido-itens">0 item(ns) no pedido</p>
+                        </div>
+                        <button type="button" id="btn-gerar-pdf" onclick="gerarPDF()" class="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 font-bold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 disabled:cursor-not-allowed disabled:opacity-50">
+                            <i class="fas fa-file-pdf" aria-hidden="true"></i><span id="texto-gerar-pdf">Gerar Pedido (PDF)</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <main id="tab-config" class="tab-content px-4 py-5">
+            <h2 id="titulo-configuracoes" class="mb-5 text-xl font-bold text-slate-900 dark:text-slate-100">Configuracoes do App</h2>
+
+            <div class="grid gap-5 lg:grid-cols-2">
+                <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+                    <h3 id="titulo-identidade" class="mb-3 font-bold text-slate-700 dark:text-slate-200">Identidade</h3>
+                    <label id="label-config-nome" for="config-nome" class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Nome do Estabelecimento</label>
+                    <input type="text" id="config-nome" placeholder="Nome do Estabelecimento" data-i18n-placeholder="business_name" data-placeholder-default="Nome do Estabelecimento" class="i18n-placeholder mb-3 w-full rounded-lg border border-slate-300 bg-white p-3 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
+                    <button type="button" id="btn-salvar-nome" onclick="salvarIdentidade()" class="w-full rounded-lg bg-blue-600 p-3 font-bold text-white transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400">Salvar Nome</button>
+                </section>
+
+                <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+                    <h3 id="titulo-idioma-moeda" class="mb-3 font-bold text-slate-700 dark:text-slate-200">Idioma e Moeda</h3>
+                    <div class="grid gap-3 sm:grid-cols-2">
+                        <div class="min-w-0">
+                            <label id="label-idioma" class="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400" for="config-idioma">Idioma</label>
+                            <select id="config-idioma" class="w-full rounded-lg border border-slate-300 bg-white p-3 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100" onchange="salvarPreferencias()"></select>
+                        </div>
+                        <div class="min-w-0">
+                            <label id="label-moeda" class="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400" for="config-moeda">Moeda</label>
+                            <select id="config-moeda" class="w-full rounded-lg border border-slate-300 bg-white p-3 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100" onchange="salvarPreferencias()"></select>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+                    <h3 id="titulo-aparencia" class="mb-3 font-bold text-slate-700 dark:text-slate-200">Aparencia</h3>
+                    <label id="label-tema" class="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400" for="config-tema">Tema</label>
+                    <select id="config-tema" class="w-full rounded-lg border border-slate-300 bg-white p-3 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100" onchange="salvarTema(this.value)"></select>
+                </section>
+
+                <section class="rounded-2xl border border-blue-200 bg-blue-50 p-4 shadow-sm dark:border-blue-500/30 dark:bg-blue-500/10">
+                    <h3 id="titulo-sincronizacao" class="mb-2 font-bold text-blue-800 dark:text-blue-300"><i class="fas fa-sync-alt" aria-hidden="true"></i> Sincronizacao Local-First</h3>
+                    <p id="texto-sincronizacao" class="mb-4 text-sm text-slate-600 dark:text-slate-300">Exporte os dados para enviar pelo WhatsApp ou importe um backup recebido.</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" id="btn-exportar" onclick="exportarEstoque()" class="rounded-lg bg-blue-600 p-3 text-center text-sm font-bold text-white transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400">Exportar (.json)</button>
+                        <label class="cursor-pointer rounded-lg bg-slate-800 p-3 text-center text-sm font-bold text-white transition hover:bg-slate-900 focus-within:ring-2 focus-within:ring-blue-400 dark:bg-slate-700 dark:hover:bg-slate-600">
+                            <span id="texto-importar">Importar</span>
+                            <input type="file" id="import-file" accept=".json,application/json" class="sr-only" onchange="importarEstoque(event)">
+                        </label>
+                    </div>
+                </section>
             </div>
+        </main>
 
-            <div class="min-w-0">
-                <label id="label-prod-unidade" for="prod-unidade" class="block text-sm font-medium text-gray-700 mb-1">Unidade</label>
-                <select id="prod-unidade" class="w-full min-w-0 border p-3 rounded" required>
-                    <option value="pct">Pacote (pct)</option>
-                    <option value="gr">Gramas (gr)</option>
-                    <option value="unidade">Unidades</option>
-                    <option value="kg">Quilos (kg)</option>
-                    <option value="caixa">Caixa</option>
-                </select>
-            </div>
+    </div>
 
-            <div class="min-w-0">
-                <label id="label-prod-preco" for="prod-preco" class="block text-sm font-medium text-gray-700 mb-1">Preço (R$)</label>
-                <input type="number" id="prod-preco" placeholder="Preço (R$)" data-i18n-placeholder="price_placeholder" data-placeholder-default="Preço (R$)" step="0.01" class="i18n-placeholder w-full min-w-0 border p-3 rounded" required>
-            </div>
+    <button type="button" id="btn-novo-produto" onclick="abrirModalProduto()" class="fixed bottom-24 right-4 z-30 inline-flex items-center gap-2 rounded-full bg-blue-600 px-5 py-4 font-bold text-white shadow-lg transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 sm:hidden">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i><span id="texto-novo-produto">Novo Produto</span>
+    </button>
 
-            <div class="min-w-0">
-                <label id="label-prod-qtd" for="prod-qtd" class="block text-sm font-medium text-gray-700 mb-1">Quantidade Inicial</label>
-                <input type="number" id="prod-qtd" placeholder="Qtd. Inicial" data-i18n-placeholder="initial_qty" data-placeholder-default="Qtd. Inicial" class="i18n-placeholder w-full min-w-0 border p-3 rounded" required>
-            </div>
-
-            <div class="col-span-2 min-w-0">
-                <label id="label-prod-categoria" for="prod-categoria" class="block text-sm font-medium text-gray-700 mb-1">Categoria / Segmento</label>
-                <input type="text" id="prod-categoria" list="categorias-sugeridas" placeholder="Categoria/Segmento" data-i18n-placeholder="category_placeholder" data-placeholder-default="Categoria/Segmento" class="i18n-placeholder w-full min-w-0 border p-3 rounded">
-                <datalist id="categorias-sugeridas">
-                    <option value="Bebidas"></option>
-                    <option value="Comidas"></option>
-                    <option value="Doces"></option>
-                    <option value="Limpeza"></option>
-                    <option value="Hortifruti"></option>
-                </datalist>
-            </div>
-
-            <div class="col-span-2 min-w-0">
-                <label id="label-consumo" for="consumo-semanal" class="block text-sm font-medium text-gray-700 mb-1">Consumo Médio Semanal</label>
-                <input type="number" id="consumo-semanal" placeholder="Ex: 18" data-i18n-placeholder="consumption_placeholder" data-placeholder-default="Ex: 18" min="0" class="i18n-placeholder w-full min-w-0 border p-3 rounded">
-            </div>
-
-            <div class="col-span-2 flex gap-2 mt-2">
-                <button id="btn-salvar-produto" type="submit" class="flex-1 bg-blue-600 text-white font-bold p-3 rounded flex-shrink-0">Salvar Produto</button>
-                <button id="btn-cancelar-edicao" type="button" onclick="cancelarEdicaoProduto()" class="hidden flex-1 bg-gray-200 text-gray-700 font-bold p-3 rounded">Cancelar</button>
-            </div>
-        </form>
-
-        <h3 id="titulo-meu-estoque" class="font-bold text-lg mb-3">Meu Estoque</h3>
-        <div id="lista-produtos" class="space-y-3 min-w-0 break-words">
-        </div>
-
-        <div class="flex justify-center w-full py-8" aria-hidden="false">
-            <button id="btn-novo-produto" type="button" onclick="voltarParaCadastro()" class="bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 min-w-0">+ Novo Produto</button>
-        </div>
-
-    </main>
-
-    <main id="tab-compra" class="tab-content p-4">
-        <h2 id="titulo-solicitacao-compra" class="font-bold text-xl mb-4">Solicitação de Compra</h2>
-        <div class="bg-white p-4 rounded-lg shadow-sm mb-4">
-            <div class="mb-3 min-w-0">
-                <label id="label-req-funcionario" for="req-funcionario" class="block text-sm font-medium text-gray-700 mb-1">Nome do Funcionário</label>
-                <input type="text" id="req-funcionario" placeholder="Nome do Funcionário" data-i18n-placeholder="employee_name" data-placeholder-default="Nome do Funcionário" class="i18n-placeholder w-full min-w-0 border p-3 rounded" required>
-            </div>
-            <div class="mb-3 min-w-0">
-                <label id="label-req-gestor" for="req-gestor" class="block text-sm font-medium text-gray-700 mb-1">Nome do Gestor (Opcional)</label>
-                <input type="text" id="req-gestor" placeholder="Nome do Gestor (Opcional)" data-i18n-placeholder="manager_name_optional" data-placeholder-default="Nome do Gestor (Opcional)" class="i18n-placeholder w-full min-w-0 border p-3 rounded">
-            </div>
-            <button id="btn-gerar-pdf" onclick="gerarPDF()" class="w-full bg-green-600 text-white font-bold p-3 rounded flex items-center justify-center gap-2">
-                <i class="fas fa-file-pdf"></i> Gerar Pedido (PDF)
+    <nav class="barra-navegacao fixed bottom-0 z-40 w-full border-t border-slate-200 bg-white/95 pt-2 backdrop-blur dark:border-slate-700 dark:bg-slate-800/95" aria-label="Navegacao principal">
+        <div class="mx-auto flex max-w-6xl justify-around">
+            <button type="button" onclick="mudarAba('tab-estoque')" class="flex min-w-[5rem] flex-col items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold text-blue-600 transition dark:text-blue-400" id="btn-tab-estoque" aria-current="page">
+                <i class="fas fa-box text-lg" aria-hidden="true"></i><span id="nav-estoque-texto">Estoque</span>
+            </button>
+            <button type="button" onclick="mudarAba('tab-compra')" class="relative flex min-w-[5rem] flex-col items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-500 transition dark:text-slate-400" id="btn-tab-compra">
+                <span class="relative">
+                    <i class="fas fa-cart-shopping text-lg" aria-hidden="true"></i>
+                    <span id="badge-nav-compra" class="absolute -right-2.5 -top-1.5 hidden min-w-[1.1rem] rounded-full bg-amber-500 px-1 text-[10px] font-black leading-[1.1rem] text-white">0</span>
+                </span>
+                <span id="nav-comprar-texto">Comprar</span>
+            </button>
+            <button type="button" onclick="mudarAba('tab-config')" class="flex min-w-[5rem] flex-col items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-500 transition dark:text-slate-400" id="btn-tab-config">
+                <i class="fas fa-cog text-lg" aria-hidden="true"></i><span id="nav-configs-texto">Configs</span>
             </button>
         </div>
-        <p id="texto-estoque-baixo" class="text-sm text-gray-500 text-center">Os itens com estoque baixo serão incluídos automaticamente no pedido.</p>
-    </main>
-
-    <main id="tab-config" class="tab-content p-4">
-        <h2 id="titulo-configuracoes" class="font-bold text-xl mb-4">Configurações do App</h2>
-        
-        <div class="bg-white p-4 rounded-lg shadow-sm mb-6 border border-gray-200">
-            <h3 id="titulo-identidade" class="font-bold mb-3 text-gray-700">Identidade</h3>
-            <label id="label-config-nome" for="config-nome" class="block text-sm font-medium text-gray-700 mb-1">Nome do Estabelecimento</label>
-            <input type="text" id="config-nome" placeholder="Nome do Estabelecimento" data-i18n-placeholder="business_name" data-placeholder-default="Nome do Estabelecimento" class="i18n-placeholder w-full min-w-0 border p-3 rounded mb-3">
-            <button id="btn-salvar-nome" onclick="salvarIdentidade()" class="w-full bg-blue-100 text-blue-700 font-bold p-3 rounded">Salvar Nome</button>
-        </div>
-
-        <div class="bg-white p-4 rounded-lg shadow-sm mb-6 border border-gray-200">
-            <h3 id="titulo-idioma-moeda" class="font-bold mb-3 text-gray-700">Idioma e Moeda</h3>
-            <div class="grid grid-cols-1 gap-3">
-                <div class="min-w-0">
-                    <label id="label-idioma" class="block text-xs font-bold text-gray-500 mb-1" for="config-idioma">Idioma</label>
-                    <select id="config-idioma" class="w-full min-w-0 border p-3 rounded" onchange="salvarPreferencias()">
-                        <option value="pt-BR">Português</option>
-                        <option value="en-US">English</option>
-                    </select>
-                </div>
-                <div class="min-w-0">
-                    <label id="label-moeda" class="block text-xs font-bold text-gray-500 mb-1" for="config-moeda">Moeda</label>
-                    <select id="config-moeda" class="w-full min-w-0 border p-3 rounded" onchange="salvarPreferencias()">
-                        <option value="BRL">Real (BRL)</option>
-                        <option value="CHF">Franco suíço (CHF)</option>
-                        <option value="EUR">Euro (EUR)</option>
-                        <option value="USD">Dólar (USD)</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white p-4 rounded-lg shadow-sm mb-6 border border-blue-200 bg-blue-50">
-            <h3 id="titulo-sincronizacao" class="font-bold mb-2 text-blue-800"><i class="fas fa-sync-alt"></i> Sincronização Local-First</h3>
-            <p id="texto-sincronizacao" class="text-sm text-gray-600 mb-4">Exporte os dados para enviar pelo WhatsApp ou importe um backup recebido.</p>
-            <div class="grid grid-cols-2 gap-2">
-                <button id="btn-exportar" onclick="exportarEstoque()" class="bg-blue-600 text-white p-3 rounded font-bold text-sm text-center">Exportar (.json)</button>
-                <label class="bg-gray-800 text-white p-3 rounded font-bold text-sm text-center cursor-pointer">
-                    <span id="texto-importar">Importar</span>
-                    <input type="file" id="import-file" accept=".json" class="hidden" onchange="importarEstoque(event)">
-                </label>
-            </div>
-        </div>
-    </main>
-
-    <nav class="fixed bottom-0 w-full bg-white border-t border-gray-200 flex justify-around p-3 text-sm">
-        <button onclick="mudarAba('tab-estoque')" class="flex flex-col items-center text-blue-600" id="btn-tab-estoque">
-            <i class="fas fa-box text-xl mb-1"></i> <span id="nav-estoque-texto">Estoque</span>
-        </button>
-        <button onclick="mudarAba('tab-compra')" class="flex flex-col items-center text-gray-500" id="btn-tab-compra">
-            <i class="fas fa-shopping-cart text-xl mb-1"></i> <span id="nav-comprar-texto">Comprar</span>
-        </button>
-        <button onclick="mudarAba('tab-config')" class="flex flex-col items-center text-gray-500" id="btn-tab-config">
-            <i class="fas fa-cog text-xl mb-1"></i> <span id="nav-configs-texto">Configs</span>
-        </button>
     </nav>
 
-    <div id="area-impressao" class="p-8 bg-white text-black w-[800px]">
-        <h1 class="text-2xl font-bold mb-1" id="pdf-nome-estab">Estabelecimento</h1>
-        <p id="pdf-titulo" class="text-gray-500 mb-6">Relatório de Necessidade de Compras</p>
-        <div class="flex justify-between mb-6 border-b pb-4">
+    <!-- Modal de cadastro / edicao de produto -->
+    <div id="modal-produto" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/60 p-0 backdrop-blur-sm sm:p-4" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-produto">
+        <div class="flex min-h-full items-end justify-center sm:items-center">
+            <div class="w-full max-w-lg rounded-t-2xl bg-white shadow-2xl dark:bg-slate-800 sm:rounded-2xl">
+                <div class="sticky top-0 flex items-center justify-between gap-3 rounded-t-2xl border-b border-slate-200 bg-white px-5 py-4 dark:border-slate-700 dark:bg-slate-800">
+                    <h3 id="titulo-modal-produto" class="text-lg font-bold text-slate-900 dark:text-slate-100">Novo produto</h3>
+                    <button type="button" id="btn-fechar-modal-produto" onclick="fecharModalProduto()" class="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-rose-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:bg-slate-700" aria-label="Fechar">
+                        <i class="fa-solid fa-xmark text-xl" aria-hidden="true"></i>
+                    </button>
+                </div>
+
+                <form id="form-produto" class="max-h-[70vh] overflow-y-auto p-5" novalidate>
+                    <input type="hidden" id="produto-editando-id" value="">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="col-span-2 min-w-0">
+                            <label id="label-prod-nome" for="prod-nome" class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Nome do Produto</label>
+                            <input type="text" id="prod-nome" placeholder="Nome (Ex: Tomate)" data-i18n-placeholder="product_name" data-placeholder-default="Nome (Ex: Tomate)" maxlength="80" class="i18n-placeholder w-full rounded-lg border border-slate-300 bg-white p-3 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100" required>
+                        </div>
+
+                        <div class="min-w-0">
+                            <label id="label-prod-unidade" for="prod-unidade" class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Unidade</label>
+                            <select id="prod-unidade" class="w-full rounded-lg border border-slate-300 bg-white p-3 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100" required></select>
+                        </div>
+
+                        <div class="min-w-0">
+                            <label id="label-prod-preco" for="prod-preco" class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Preco</label>
+                            <input type="number" id="prod-preco" placeholder="Preco" data-i18n-placeholder="price_placeholder" data-placeholder-default="Preco" step="0.01" min="0" inputmode="decimal" class="i18n-placeholder w-full rounded-lg border border-slate-300 bg-white p-3 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100" required>
+                        </div>
+
+                        <div class="min-w-0">
+                            <label id="label-prod-qtd" for="prod-qtd" class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Quantidade Inicial</label>
+                            <input type="number" id="prod-qtd" placeholder="Qtd. Inicial" data-i18n-placeholder="initial_qty" data-placeholder-default="Qtd. Inicial" step="any" min="0" inputmode="decimal" class="i18n-placeholder w-full rounded-lg border border-slate-300 bg-white p-3 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100" required>
+                        </div>
+
+                        <div class="min-w-0">
+                            <label id="label-consumo" for="consumo-semanal" class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Consumo Medio Semanal</label>
+                            <input type="number" id="consumo-semanal" placeholder="Ex: 18" data-i18n-placeholder="consumption_placeholder" data-placeholder-default="Ex: 18" step="any" min="0" inputmode="decimal" class="i18n-placeholder w-full rounded-lg border border-slate-300 bg-white p-3 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
+                        </div>
+
+                        <div class="col-span-2 min-w-0">
+                            <label id="label-prod-categoria" for="prod-categoria" class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Categoria / Segmento</label>
+                            <input type="text" id="prod-categoria" list="categorias-sugeridas" placeholder="Categoria/Segmento" data-i18n-placeholder="category_placeholder" data-placeholder-default="Categoria/Segmento" maxlength="60" class="i18n-placeholder w-full rounded-lg border border-slate-300 bg-white p-3 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
+                            <datalist id="categorias-sugeridas">
+                                <option value="Bebidas"></option>
+                                <option value="Comidas"></option>
+                                <option value="Doces"></option>
+                                <option value="Limpeza"></option>
+                                <option value="Hortifruti"></option>
+                            </datalist>
+                        </div>
+
+                        <p id="dica-consumo" class="col-span-2 rounded-lg bg-slate-50 p-3 text-xs text-slate-500 dark:bg-slate-900/50 dark:text-slate-400">
+                            <i class="fa-solid fa-circle-info mr-1" aria-hidden="true"></i><span id="texto-dica-consumo">Meta de cobertura: 7 dias</span>
+                        </p>
+                    </div>
+
+                    <div class="mt-5 flex gap-2">
+                        <button id="btn-salvar-produto" type="submit" class="flex-1 rounded-xl bg-blue-600 p-3 font-bold text-white transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400">Salvar Produto</button>
+                        <button id="btn-cancelar-edicao" type="button" onclick="fecharModalProduto()" class="flex-1 rounded-xl border border-slate-300 p-3 font-bold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmacao -->
+    <div id="modal-confirmacao" class="fixed inset-0 z-[55] hidden items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="titulo-confirmacao">
+        <div class="w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl dark:bg-slate-800">
+            <div class="flex items-start gap-3">
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300">
+                    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                </div>
+                <div class="min-w-0">
+                    <h3 id="titulo-confirmacao" class="font-bold text-slate-900 dark:text-slate-100">Confirmar</h3>
+                    <p id="texto-confirmacao" class="mt-1 break-words text-sm text-slate-600 dark:text-slate-300"></p>
+                </div>
+            </div>
+            <div class="mt-5 flex gap-2">
+                <button type="button" id="btn-confirmar" class="flex-1 rounded-xl bg-rose-600 p-3 font-bold text-white transition hover:bg-rose-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400">Confirmar</button>
+                <button type="button" id="btn-cancelar-confirmacao" class="flex-1 rounded-xl border border-slate-300 p-3 font-bold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Area usada apenas para gerar o PDF -->
+    <div id="area-impressao" class="w-[800px] bg-white p-8 text-black">
+        <h1 class="mb-1 text-2xl font-bold" id="pdf-nome-estab">Estabelecimento</h1>
+        <p id="pdf-titulo" class="mb-6 text-gray-500">Relatorio de Necessidade de Compras</p>
+        <div class="mb-6 flex justify-between border-b pb-4">
             <div>
                 <p><strong id="pdf-label-data">Data:</strong> <span id="pdf-data"></span></p>
                 <p><strong id="pdf-label-funcionario">Solicitante:</strong> <span id="pdf-funcionario"></span></p>
                 <p><strong id="pdf-label-gestor">Aprovador:</strong> <span id="pdf-gestor"></span></p>
             </div>
         </div>
-        <table class="w-full text-left border-collapse">
+        <table class="w-full border-collapse text-left">
             <thead>
                 <tr class="bg-gray-100">
-                    <th id="pdf-th-produto" class="p-2 border">Produto</th>
-                    <th id="pdf-th-estoque" class="p-2 border">Estoque Atual</th>
-                    <th id="pdf-th-unidade" class="p-2 border">Unidade</th>
+                    <th id="pdf-th-produto" class="border p-2">Produto</th>
+                    <th id="pdf-th-qtd" class="border p-2 text-right">Qtd. a comprar</th>
+                    <th id="pdf-th-unidade" class="border p-2">Unidade</th>
+                    <th id="pdf-th-preco" class="border p-2 text-right">Preco unit.</th>
+                    <th id="pdf-th-custo" class="border p-2 text-right">Custo estimado</th>
                 </tr>
             </thead>
-            <tbody id="pdf-tabela-corpo">
-            </tbody>
+            <tbody id="pdf-tabela-corpo"></tbody>
         </table>
+        <p id="pdf-legenda-manual" class="mt-4 text-xs text-gray-500"></p>
     </div>
 
     <script src="./libs/jspdf.umd.min.js" defer></script>
@@ -206,95 +375,97 @@
     <script src="js/ui.js" defer></script>
     <script src="js/app.js" defer></script>
 
-    <!-- Modal de Ajuda Completo -->
-    <div id="modal-ajuda" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 transition-opacity">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center border-b p-5 sticky top-0 bg-white rounded-t-xl z-10">
-                <h3 class="text-xl font-bold text-gray-800">
-                    <i class="fa-solid fa-circle-info text-indigo-600 mr-2"></i><span data-i18n="ajuda_titulo">Central de Ajuda</span>
+    <!-- Central de Ajuda -->
+    <div id="modal-ajuda" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-ajuda">
+        <div class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-2xl dark:bg-slate-800">
+            <div class="sticky top-0 z-10 flex items-center justify-between gap-3 rounded-t-2xl border-b border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
+                <h3 id="titulo-modal-ajuda" class="text-xl font-bold text-slate-900 dark:text-slate-100">
+                    <i class="fa-solid fa-circle-info mr-2 text-blue-600 dark:text-blue-400" aria-hidden="true"></i><span data-i18n="ajuda_titulo">Central de Ajuda</span>
                 </h3>
-                <button onclick="fecharModalAjuda()" class="text-gray-500 hover:text-red-500 text-2xl font-bold">&times;</button>
+                <button type="button" onclick="fecharModalAjuda()" class="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-rose-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:bg-slate-700" aria-label="Fechar">
+                    <i class="fa-solid fa-xmark text-xl" aria-hidden="true"></i>
+                </button>
             </div>
 
-            <div class="p-6 space-y-8">
+            <div class="space-y-8 p-6">
                 <section>
-                    <h4 class="font-bold text-gray-900 text-lg mb-3 flex items-center">
-                        <i class="fa-solid fa-mobile-screen mr-2 text-indigo-500"></i><span data-i18n="ajuda_manual_titulo">Manual do Sistema</span>
+                    <h4 class="mb-3 flex items-center text-lg font-bold text-slate-900 dark:text-slate-100">
+                        <i class="fa-solid fa-mobile-screen mr-2 text-blue-500" aria-hidden="true"></i><span data-i18n="ajuda_manual_titulo">Manual do Sistema</span>
                     </h4>
-                    <ul class="space-y-4 text-sm text-gray-700">
+                    <ul class="space-y-4 text-sm text-slate-700 dark:text-slate-300">
                         <li class="flex items-start">
-                            <i class="fa-solid fa-download text-green-500 mt-1 mr-3"></i>
+                            <i class="fa-solid fa-download mr-3 mt-1 text-emerald-500" aria-hidden="true"></i>
                             <div>
-                                <strong data-i18n="ajuda_inst_titulo">1. Instalação:</strong>
-                                <span data-i18n="ajuda_inst_texto">No Android/iOS, toque no ícone azul no canto inferior direito da tela. No computador, clique no ícone de instalação na barra de endereços (canto superior direito, próximo à estrela de favoritos).</span>
+                                <strong data-i18n="ajuda_inst_titulo">1. Instalacao:</strong>
+                                <span data-i18n="ajuda_inst_texto"></span>
                             </div>
                         </li>
                         <li class="flex items-start">
-                            <i class="fa-solid fa-table-columns text-blue-500 mt-1 mr-3"></i>
+                            <i class="fa-solid fa-table-columns mr-3 mt-1 text-blue-500" aria-hidden="true"></i>
                             <div>
                                 <strong data-i18n="ajuda_dash_titulo">2. Dashboard:</strong>
-                                <span data-i18n="ajuda_dash_texto">Na tela inicial, cadastre e preencha as informações dos produtos. O sistema fará todos os cálculos automaticamente com base nestes dados.</span>
+                                <span data-i18n="ajuda_dash_texto"></span>
                             </div>
                         </li>
                         <li class="flex items-start">
-                            <i class="fa-solid fa-cart-shopping text-orange-500 mt-1 mr-3"></i>
+                            <i class="fa-solid fa-cart-shopping mr-3 mt-1 text-amber-500" aria-hidden="true"></i>
                             <div>
                                 <strong data-i18n="ajuda_compra_titulo">3. Compras e PDF:</strong>
-                                <span data-i18n="ajuda_compra_texto">No menu Compras, preencha o nome do funcionário solicitante para gerar o PDF. Você pode manipular manualmente as quantidades a serem compradas para se adequar a semanas de maior movimento.</span>
+                                <span data-i18n="ajuda_compra_texto"></span>
                             </div>
                         </li>
                         <li class="flex items-start">
-                            <i class="fa-solid fa-gear text-gray-500 mt-1 mr-3"></i>
+                            <i class="fa-solid fa-gear mr-3 mt-1 text-slate-500" aria-hidden="true"></i>
                             <div>
-                                <strong data-i18n="ajuda_config_titulo">4. Configurações & Backup:</strong>
-                                <span data-i18n="ajuda_config_texto">Altere o idioma e a moeda local com apenas alguns cliques. Nesta mesma tela, você pode realizar o backup dos seus dados através da Sincronização Local-First.</span>
+                                <strong data-i18n="ajuda_config_titulo">4. Configuracoes & Backup:</strong>
+                                <span data-i18n="ajuda_config_texto"></span>
                             </div>
                         </li>
                     </ul>
                 </section>
 
-                <hr class="border-gray-200">
+                <hr class="border-slate-200 dark:border-slate-700">
 
                 <section>
-                    <h4 class="font-bold text-gray-900 text-lg mb-3 flex items-center">
-                        <i class="fa-solid fa-brain mr-2 text-indigo-500"></i><span data-i18n="ajuda_op_titulo">Guia de Operação</span>
+                    <h4 class="mb-3 flex items-center text-lg font-bold text-slate-900 dark:text-slate-100">
+                        <i class="fa-solid fa-brain mr-2 text-blue-500" aria-hidden="true"></i><span data-i18n="ajuda_op_titulo">Guia de Operacao</span>
                     </h4>
-                    <div class="space-y-4 text-sm text-gray-700">
-                        <div class="border-l-4 border-indigo-500 pl-3">
-                            <strong data-i18n="ajuda_calc_titulo">Cálculo Cirúrgico:</strong>
-                            <span data-i18n="ajuda_calc_texto">O sistema calcula com precisão matemática. Exemplo: se a meta de uso é de 3 caixas/semana e você informa ter 2, o sistema sugerirá comprar exatamente 1 caixa.</span>
-                        </div>
+                    <div class="space-y-4 text-sm text-slate-700 dark:text-slate-300">
                         <div class="border-l-4 border-blue-500 pl-3">
-                            <strong data-i18n="ajuda_demanda_titulo">Ajuste de Demanda:</strong>
-                            <span data-i18n="ajuda_demanda_texto">Adapte suas metas em caso de alta ou baixa demanda (feriados, eventos). O algoritmo depende das suas estimativas reais para ser preciso.</span>
+                            <strong data-i18n="ajuda_calc_titulo">Calculo Cirurgico:</strong>
+                            <span data-i18n="ajuda_calc_texto"></span>
                         </div>
-                        <div class="border-l-4 border-red-500 pl-3">
-                            <strong data-i18n="ajuda_invent_titulo">Inventário Semanal:</strong>
-                            <span data-i18n="ajuda_invent_texto">Para evitar rupturas, é obrigatório fazer a contagem física do estoque semanalmente antes de gerar o PDF. O sistema confia no que você digita!</span>
+                        <div class="border-l-4 border-amber-500 pl-3">
+                            <strong data-i18n="ajuda_demanda_titulo">Ajuste de Demanda:</strong>
+                            <span data-i18n="ajuda_demanda_texto"></span>
+                        </div>
+                        <div class="border-l-4 border-rose-500 pl-3">
+                            <strong data-i18n="ajuda_invent_titulo">Inventario Semanal:</strong>
+                            <span data-i18n="ajuda_invent_texto"></span>
                         </div>
                     </div>
                 </section>
             </div>
 
-            <div class="bg-gray-50 p-4 border-t text-center rounded-b-xl">
-                <button onclick="fecharModalAjuda()" class="bg-indigo-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-indigo-700 w-full transition-colors" data-i18n="ajuda_botao_entendi">Entendi</button>
+            <div class="rounded-b-2xl border-t border-slate-200 bg-slate-50 p-4 text-center dark:border-slate-700 dark:bg-slate-900/50">
+                <button type="button" onclick="fecharModalAjuda()" class="w-full rounded-xl bg-blue-600 px-6 py-3 font-bold text-white transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400" data-i18n="ajuda_botao_entendi">Entendi</button>
             </div>
         </div>
     </div>
 
-    <div id="toast-notificacao" class="hidden fixed bottom-5 left-1/2 transform -translate-x-1/2 md:left-auto md:right-5 md:translate-x-0 px-6 py-3 rounded-lg shadow-lg text-white font-bold z-50 transition-opacity duration-300 opacity-0">
+    <div id="toast-notificacao" class="fixed bottom-5 left-1/2 z-[60] hidden -translate-x-1/2 rounded-xl px-6 py-3 font-bold text-white opacity-0 shadow-xl transition-opacity duration-300 md:left-auto md:right-5 md:translate-x-0" role="status" aria-live="polite">
         <span id="toast-mensagem"></span>
     </div>
 
-    <div id="update-banner" class="hidden fixed bottom-5 right-5 z-50 w-80 max-w-[calc(100%-2.5rem)] bg-blue-900 text-white border border-blue-700 rounded-xl shadow-xl p-4">
+    <div id="update-banner" class="fixed bottom-5 right-5 z-[60] hidden w-80 max-w-[calc(100%-2.5rem)] rounded-2xl border border-blue-700 bg-blue-900 p-4 text-white shadow-xl">
         <div class="flex items-start gap-3">
-            <i class="fa-solid fa-rotate text-lg mt-0.5"></i>
+            <i class="fa-solid fa-rotate mt-0.5 text-lg" aria-hidden="true"></i>
             <div class="flex-1">
-                <p class="font-bold text-sm">Nova versao disponivel</p>
-                <p class="text-xs text-blue-100 mt-1">Atualize para carregar os arquivos mais recentes do app.</p>
+                <p class="text-sm font-bold" id="update-banner-titulo">Nova versao disponivel</p>
+                <p class="mt-1 text-xs text-blue-100" id="update-banner-texto">Atualize para carregar os arquivos mais recentes do app.</p>
             </div>
         </div>
-        <button id="btn-update-app" type="button" class="mt-3 w-full bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-3 rounded-lg transition-colors">
+        <button id="btn-update-app" type="button" class="mt-3 w-full rounded-lg bg-blue-500 px-3 py-2 font-bold text-white transition hover:bg-blue-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60">
             Atualizar agora
         </button>
     </div>

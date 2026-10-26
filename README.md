@@ -12,13 +12,19 @@ O sistema é multi-idioma e multi-moeda, configurável diretamente nas Configura
 
 ## Funcionalidades Principais
 
-- **Gestão de Estoque** — cadastro de produtos por unidade, preço, quantidade e categoria/segmento, com organização intuitiva por tipo de produto e cálculo automático do valor total em estoque.
-- **Pedidos de Compra em PDF** — geração de solicitação de compra em PDF, com itens de estoque baixo incluídos automaticamente na lista.
-- **Cálculo Inteligente de Reposição** — lógica que estima a quantidade a ser comprada com base no consumo médio semanal, projetando a necessidade para um período de 7 dias.
+- **Gestão de Estoque** — cadastro de produtos por unidade, preço, quantidade e categoria/segmento, com organização por tipo de produto e cálculo automático do valor total em estoque.
+- **Painel de Situação** — cada produto exibe sua cobertura em dias e uma etiqueta de situação (Crítico, Atenção, OK ou Sem meta), com ícone e texto além da cor. Busca por nome, filtros por categoria e por situação, e ordenação por cobertura, nome ou valor.
+- **Cálculo Inteligente de Reposição** — estima a quantidade a comprar a partir do consumo médio semanal, projetando a necessidade para 7 dias e arredondando conforme a unidade do produto.
+- **Ajuste Manual do Pedido** — a quantidade digitada pelo usuário substitui a sugestão do sistema e é a que sai no PDF, inclusive para itens que não estão abaixo da meta. Itens sugeridos podem ser retirados do pedido, e um botão restaura todas as sugestões de uma vez.
+- **Pré-visualização do Pedido** — a aba Comprar mostra exatamente a lista que sairá no PDF, editável ali mesmo, com subtotal por categoria e total estimado antes de gerar o arquivo.
+- **Pedidos de Compra em PDF** — solicitação de compra com produto, quantidade, unidade, preço unitário e custo estimado, agrupada por categoria, com subtotais, total geral e marcação dos itens ajustados à mão.
+- **Tema Claro e Escuro** — acompanha a preferência do sistema ou pode ser fixado nas Configurações.
 - **Multiplataforma e Offline** — instalável como app em Windows, Android e iOS via PWA, funcionando integralmente sem conexão com a internet.
 - **Central de Ajuda Integrada** — guia operacional e manual do sistema acessível diretamente no app, traduzido para 4 idiomas (Português, Inglês, Alemão e Italiano), garantindo suporte completo para equipes internacionais.
 
 ## Screenshots
+
+> **Atenção:** as imagens abaixo são da interface anterior e precisam ser regeradas.
 
 <p>
   <b>Abertura do App</b><br>
@@ -65,7 +71,8 @@ O Stock Control não precisa ser baixado de nenhuma loja de aplicativos. A insta
 ## Arquitetura e Desenvolvimento
 O **Stock Control** foi concebido com uma arquitetura *Offline-First*, focada em performance e independência de bibliotecas externas.
 
-*   **Tecnologia:** Implementado puramente em **Vanilla JavaScript**, garantindo leveza, carregamento instantâneo e total controle sobre a performance no navegador.
+*   **Tecnologia:** Implementado puramente em **Vanilla JavaScript**, garantindo leveza, carregamento instantâneo e total controle sobre a performance no navegador. Nenhuma dependência é baixada em runtime: Tailwind, Font Awesome e as bibliotecas de PDF são servidas de `libs/`, versionadas no repositório.
+*   **Documentação técnica:** [`docs/manutencao.md`](docs/manutencao.md) (como rodar, estrutura e gotchas), [`docs/arquitetura.md`](docs/arquitetura.md), [`docs/regras-negocio.md`](docs/regras-negocio.md) e [`docs/decisoes/`](docs/decisoes/).
 *   **Design de Lógica:** A arquitetura do sistema e as regras de negócio foram desenhadas para garantir a integridade dos dados locais (via `LocalStorage`) sem dependência de back-end.
 *   **AI-Assisted Engineering:** Este projeto foi desenvolvido através de um fluxo de trabalho de *AI-assisted pair programming*. A IA foi utilizada como ferramenta de suporte para o desenho da arquitetura, refatoração de código para padrões modernos, implementação de internacionalização (i18n) e testes de fluxos operacionais, permitindo uma entrega rápida e robusta de um software que já está em uso em ambiente de produção real.
 
