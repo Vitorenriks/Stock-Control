@@ -1,7 +1,7 @@
 (function () {
     const traducoes = {
         'pt-BR': {
-            page_title: 'Organizador de Estoque',
+            page_title: 'Stock Control',
             local_mode: 'Modo Local Seguro',
             total_stock_value: 'Valor Total em Estoque',
             add_product: 'Adicionar Produto',
@@ -170,7 +170,7 @@
             ajuda_botao_entendi: 'Entendi'
         },
         'it-IT': {
-            page_title: 'Organizzatore di Magazzino',
+            page_title: 'Stock Control',
             local_mode: 'Modalità locale sicura',
             total_stock_value: 'Valore totale del magazzino',
             add_product: 'Aggiungi prodotto',
@@ -339,7 +339,7 @@
             ajuda_botao_entendi: 'Ho capito'
         },
         'en-US': {
-            page_title: 'Inventory Organizer',
+            page_title: 'Stock Control',
             local_mode: 'Local Secure Mode',
             total_stock_value: 'Total Stock Value',
             add_product: 'Add Product',
@@ -508,7 +508,7 @@
             ajuda_botao_entendi: 'Got it'
         },
         'de-DE': {
-            page_title: 'Lagerorganizer',
+            page_title: 'Stock Control',
             local_mode: 'Lokaler Sicherheitsmodus',
             total_stock_value: 'Gesamtwert des Lagerbestands',
             add_product: 'Produkt hinzufügen',
