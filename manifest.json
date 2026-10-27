@@ -1,5 +1,4 @@
 {
-  "id": "stock-control",
   "name": "Stock Control",
   "short_name": "S&C",
   "description": "Controle de estoque offline-first com pedido de compra em PDF.",

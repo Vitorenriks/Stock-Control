@@ -1372,20 +1372,41 @@ function gerarPDF() {
     const elementoParaImpressao = document.getElementById('area-impressao');
     elementoParaImpressao.style.display = 'block';
 
+    // O html2canvas captura a pagina na posicao de rolagem atual. O botao fica num
+    // rodape fixo, entao o clique acontece com a pagina rolada e o topo do relatorio
+    // sairia cortado. Subimos ao topo para capturar e devolvemos a posicao depois.
+    const rolagemAnterior = window.scrollY;
+    window.scrollTo(0, 0);
+
+    const restaurarTela = () => {
+        elementoParaImpressao.style.display = 'none';
+        window.scrollTo(0, rolagemAnterior);
+    };
+
     const opcoes = {
         margin: 10,
         filename: `Pedido_Compra_${new Date().toISOString().slice(0, 10)}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, backgroundColor: '#ffffff' },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        html2canvas: {
+            scale: 2,
+            backgroundColor: '#ffffff',
+            scrollX: 0,
+            scrollY: 0,
+            // A area de impressao tem largura fixa de 800px. Sem isto o clone e
+            // montado na largura do celular e a tabela sai cortada na lateral.
+            windowWidth: 800
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        // Sem isto o PDF e fatiado em offset arbitrario e parte linhas ao meio.
+        pagebreak: { mode: ['css', 'legacy'], avoid: ['tr'] }
     };
 
     html2pdfDisponivel().set(opcoes).from(elementoParaImpressao).save().then(() => {
-        elementoParaImpressao.style.display = 'none';
+        restaurarTela();
         mostrarNotificacao(t('pdf_generated'), 'sucesso');
     }).catch((erro) => {
         console.error('Falha ao gerar o PDF:', erro);
-        elementoParaImpressao.style.display = 'none';
+        restaurarTela();
         mostrarNotificacao(t('pdf_lib_missing'), 'erro');
     });
 }
@@ -1496,7 +1517,7 @@ window.addEventListener('beforeinstallprompt', (event) => {
         botaoInstalacao = document.createElement('button');
         botaoInstalacao.id = 'btn-install';
         botaoInstalacao.type = 'button';
-        botaoInstalacao.className = 'fixed bottom-44 right-4 z-30 inline-flex items-center gap-2 rounded-full bg-slate-800 px-4 py-3 font-bold text-white shadow-lg transition hover:bg-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400';
+        botaoInstalacao.className = 'fixed bottom-44 right-4 z-50 inline-flex items-center gap-2 rounded-full bg-slate-800 px-4 py-3 font-bold text-white shadow-lg transition hover:bg-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400';
         botaoInstalacao.innerHTML = `<i class="fas fa-download" aria-hidden="true"></i> ${window.InventoryUI.escapar(t('install_app'))}`;
         document.body.appendChild(botaoInstalacao);
     }

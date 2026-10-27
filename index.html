@@ -7,6 +7,9 @@
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#1e3a8a">
     <meta name="description" content="Controle de estoque offline-first com geracao de pedido de compra em PDF.">
+    <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="./icons/icon-512.png">
+    <link rel="shortcut icon" type="image/png" href="./icons/icon-192.png">
     <link rel="apple-touch-icon" href="./icons/icon-192.png">
 
     <script>
@@ -43,6 +46,10 @@
     <link rel="stylesheet" href="./libs/fontawesome.min.css">
     <style>
         #area-impressao { display: none; }
+        /* Evita que o html2pdf parta uma linha ao meio na virada de pagina. */
+        #area-impressao table { page-break-inside: auto; }
+        #area-impressao tr { page-break-inside: avoid; break-inside: avoid; }
+        #area-impressao thead { display: table-header-group; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         .form-editando { box-shadow: 0 0 0 2px #2563eb inset; }
@@ -369,7 +376,7 @@
     </div>
 
     <script src="./libs/jspdf.umd.min.js" defer></script>
-    <script src="./libs/html2pdf.bundle.min.js?v=2" defer></script>
+    <script src="./libs/html2pdf.bundle.min.js" defer></script>
 
     <script src="js/i18n.js" defer></script>
     <script src="js/ui.js" defer></script>

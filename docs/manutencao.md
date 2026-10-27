@@ -68,6 +68,12 @@ Ordem de carregamento obrigatória: `i18n.js` → `ui.js` → `app.js`. `app.js`
 
 6. **Não re-renderize dentro do evento `input`.** Isso mata o foco do campo de quantidade. O padrão em uso: `input` → só atualiza números (`atualizarTotais()`); `change` → re-render completo com `renderizarPreservandoFoco()`.
 
+7. **Nunca ponha query string (`?v=2`) no `src` de um arquivo de `libs/`.** O `sw.js` é cache-first e `caches.match()` compara a URL **inteira**, query incluída. A URL com query não bate com a do `PRECACHE_URLS`, o `fetch` falha offline e o `catch` devolvia `index.html` como se fosse o script — a biblioteca quebrava em silêncio. Para invalidar cache existe o `CACHE_VERSION`. Ver gotcha 1.
+
+8. **A aba do navegador não usa o `manifest.json`.** O manifest só vale para o app instalado. Sem `<link rel="icon">` no `index.html`, a aba fica sem a logo e o navegador pede `/favicon.ico`, que não existe no GitHub Pages (404). Ícone novo precisa entrar nos dois lugares.
+
+9. **Mexeu na área de impressão do PDF? Gere um pedido com duas páginas antes de fechar.** O `html2pdf` fatia uma imagem única: sem as regras `page-break-inside` do `<style>` e sem a opção `pagebreak` em `gerarPDF()`, ele corta linha ao meio na virada de página. A captura também respeita a rolagem atual — por isso `gerarPDF()` sobe ao topo antes de capturar e devolve a posição depois.
+
 ---
 
 ## Estrutura dos dados em `localStorage`

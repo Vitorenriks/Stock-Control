@@ -1,4 +1,4 @@
-const CACHE_VERSION = "estoque-v3.0";
+const CACHE_VERSION = "estoque-v3.1";
 
 const PRECACHE_URLS = [
     './',
@@ -48,10 +48,20 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+    if (event.request.method !== 'GET') {
+        return;
+    }
+
     event.respondWith(
         caches.match(event.request).then((response) => {
             return response || fetch(event.request).catch(() => {
-                return caches.match('./index.html');
+                // Offline e fora do precache. Devolver index.html so faz sentido para
+                // navegacao: para um .js ou .css o script receberia HTML e quebraria
+                // em silencio, foi o que aconteceu com o html2pdf.
+                if (event.request.mode === 'navigate') {
+                    return caches.match('./index.html');
+                }
+                return Response.error();
             });
         })
     );
